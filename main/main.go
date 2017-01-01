@@ -5,7 +5,6 @@ import (
 	zmq4 "github.com/pebbe/zmq4"
 	"strconv"
 )
-
 func main(){
 	if len(os.Args) < 3{
 		println("Need to pass in config file location and node name!")

@@ -50,7 +50,6 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			fmt.Print("sender: " + test.Sender)
 
 		}
-
 		else if input=="g"{
 			fmt.print(generateCandidate())
 		}

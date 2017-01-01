@@ -7,7 +7,6 @@ import (
 )
 
 var effort int
-
 func generateCandidate() *big.Int{
 	tmp := rand.Int63()
 	if tmp % 2 == 0{

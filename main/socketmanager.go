@@ -51,8 +51,6 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	return ret
 }
 
-
-
 func nodeSend(str string, soc NodeSocket) error{
 	out := str + " | " + getCurrentTimestamp()
 	_, err := soc.sendsock.Send(out, 0)

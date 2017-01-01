@@ -12,7 +12,6 @@ func check(e error) {
 	}
 }
 
-
 func getNodeInfo(self string, config Configs) NodeInfo{
 	for i := 0; i < len(config.Nodes); i++ {
 		if config.Nodes[i].NodeName == self{

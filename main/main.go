@@ -10,9 +10,8 @@ func main(){
 		return
 	}
 	configfile := os.Args[1]
-	var configs NodeList = ReadConfig(configfile)
-	println(configs.Nodes[0].NodeName)
-
+	var configs Configs = ReadConfig(configfile)
+	println(configs.Nodes[1].NodeName)
 }
 
 func check(e error) {

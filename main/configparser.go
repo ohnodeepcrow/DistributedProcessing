@@ -4,7 +4,6 @@ import (
 	"os"
 	"io/ioutil"
 	"strings"
-	"strconv"
 )
 
 type Configs struct{
@@ -15,7 +14,7 @@ type NodeInfo struct {
 	NodeName	string
 	NodeGroup	string
 	NodeAddr	string
-	NodePort	int
+	NodePort	string
 }
 
 // Reads info from config file
@@ -68,7 +67,7 @@ func ParseNode(nodelines []string) NodeInfo{
 		} else if strings.Contains(lin,"NodeGroup"){
 			retnode.NodeGroup = strings.Split(lin,"=")[1]
 		} else if strings.Contains(lin,"NodePort"){
-			retnode.NodePort,err =  strconv.Atoi(strings.Split(lin,"=")[1])
+			retnode.NodePort =  strings.Split(lin,"=")[1]
 			check(err)
 		}
 	}

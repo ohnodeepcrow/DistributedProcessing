@@ -14,7 +14,8 @@ type NodeInfo struct {
 	NodeName	string
 	NodeGroup	string
 	NodeAddr	string
-	NodePort	string
+	SendPort	string
+	RecvPort	string
 }
 
 // Reads info from config file
@@ -66,8 +67,11 @@ func ParseNode(nodelines []string) NodeInfo{
 			retnode.NodeAddr = strings.Split(lin,"=")[1]
 		} else if strings.Contains(lin,"NodeGroup"){
 			retnode.NodeGroup = strings.Split(lin,"=")[1]
-		} else if strings.Contains(lin,"NodePort"){
-			retnode.NodePort =  strings.Split(lin,"=")[1]
+		} else if strings.Contains(lin,"SendPort"){
+			retnode.SendPort =  strings.Split(lin,"=")[1]
+			check(err)
+		} else if strings.Contains(lin,"RecvPort"){
+			retnode.RecvPort =  strings.Split(lin,"=")[1]
 			check(err)
 		}
 	}

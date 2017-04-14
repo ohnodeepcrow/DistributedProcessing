@@ -37,10 +37,9 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			fmt.Print(string(b) + "\n")
 			//nodeSend(soc, string(b))
 
-		}
-		else if input=="r" {
-			temp := nodeReceive(soc)
-			res := []byte(tmp)
+		} else if input=="r" {
+			temp := nodeReceive(self)
+			res := []byte(temp)
 			var test Message
 			json.Unmarshal(res,&test)
 
@@ -49,9 +48,8 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			fmt.Print("value: " + test.Value)
 			fmt.Print("sender: " + test.Sender)
 
-		}
-		else if input=="g"{
-			fmt.print(generateCandidate())
+		} else if input=="g"{
+			fmt.Print(generateCandidate())
 		}
 	}
 }

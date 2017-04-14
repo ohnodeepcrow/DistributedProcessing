@@ -53,17 +53,17 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 
 
 
-func nodeSend(str string, soc *zmq4.Socket) error{
+func nodeSend(str string, soc NodeSocket) error{
 	out := str + " | " + getCurrentTimestamp()
-	_, err := soc.Send(out, 0)
+	_, err := soc.sendsock.Send(out, 0)
 	return err
 
 }
 
-func nodeReceive(soc *zmq4.Socket) string{
+func nodeReceive(soc NodeSocket) string{
 	ret := ""
 	for i := 0; i < 1000000; i++{
-		tmp,err := soc.Recv(zmq4.DONTWAIT)
+		tmp,err := soc.recvsock.Recv(zmq4.DONTWAIT)
 		if err == syscall.EAGAIN {
 			continue
 		}

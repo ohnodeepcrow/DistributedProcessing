@@ -16,6 +16,7 @@ type NodeInfo struct {
 	NodeAddr	string
 	SendPort	string
 	RecvPort	string
+	Effort 		string
 }
 
 // Reads info from config file
@@ -72,6 +73,9 @@ func ParseNode(nodelines []string) NodeInfo{
 			check(err)
 		} else if strings.Contains(lin,"RecvPort"){
 			retnode.RecvPort =  strings.Split(lin,"=")[1]
+			check(err)
+		} else if strings.Contains(lin,"Effort"){
+			retnode.Effort =  strings.Split(lin,"=")[1]
 			check(err)
 		}
 	}

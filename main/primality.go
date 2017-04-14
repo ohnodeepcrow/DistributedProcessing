@@ -13,6 +13,6 @@ func generateCandidate() *big.Int{
 	return big.NewInt(tmp)
 }
 
-func testPrime(){
-
+func testPrime(testee big.Int, rounds int) bool{
+	return testee.ProbablyPrime(rounds)
 }

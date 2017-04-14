@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	zmq4 "github.com/pebbe/zmq4"
+	"strconv"
 )
 
 func main(){
@@ -20,7 +21,10 @@ func main(){
 	println("Port1: " + self.SendPort)
 	println("Port2: " + self.RecvPort)
 	println("Group: " + self.NodeGroup)
+	println("Effort Level: " + self.Effort)
 	cntxt,_ := zmq4.NewContext()
+	eff, _ := strconv.Atoi(self.Effort)
+	setEffort(eff)
 	var ns NodeSocket
 	if self.NodeName == "leader"{
 		ns = establishLeader(cntxt, self)

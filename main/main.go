@@ -5,12 +5,20 @@ import (
 	zmq4 "github.com/pebbe/zmq4"
 	"strconv"
 	"fmt"
+	"sync"
+	"runtime"
 )
 func main(){
 	if len(os.Args) < 3{
 		println("Need to pass in config file location and node name!")
 		return
 	}
+
+	runtime.GOMAXPROCS(2)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	configfile := os.Args[1]
 	selfstr := os.Args[2]
 	var configs Configs = ReadConfig(configfile)
@@ -31,5 +39,8 @@ func main(){
 	} else {
 		ns = establishMember(cntxt, self, leader)
 	}
-	startIO(cntxt, ns, self)
+	go startIO(cntxt, ns, self)
+	go startReceiver()
+
+	wg.Wait()
 }

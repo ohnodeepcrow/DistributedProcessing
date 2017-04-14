@@ -18,7 +18,8 @@ func generateCandidate() *big.Int{
 func setEffort(i int){
 	effort=i
 }
-func testPrime(num big.Int,effort int){
+func testPrime(num big.Int,effort int) bool{
 	isPrime := num.ProbablyPrime(effort)
 	fmt.Println(isPrime)
+	return isPrime
 }

@@ -27,5 +27,5 @@ func main(){
 	} else {
 		ns = establishMember(cntxt, self, leader)
 	}
-	startIO(cntxt, ns)
+	startIO(cntxt, ns, self)
 }

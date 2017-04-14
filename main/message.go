@@ -1,9 +1,9 @@
 package main
 
 type Message struct{
-	sender string
-	receiver string
-	kind string
-	value string
-	timestamp string
+	Sender string
+	Receiver string
+	Kind string
+	Value string
+	Timestamp string
 }

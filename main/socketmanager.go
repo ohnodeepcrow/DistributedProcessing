@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/pebbe/zmq4"
-	"time"
 	"syscall"
 )
 

@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"github.com/pebbe/zmq4"
-	"time"
 	"encoding/json"
 	"bufio"
 	"strings"
@@ -28,7 +27,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			a[0] = strings.Split(text, " ")[0]
 			a[1] = strings.Trim(strings.Split(text1, " ")[1], "\n")
 
-			msg := &Message{sender: nodeinfo.NodeName, receiver: text, kind: a[0], value: a[1], timestamp: getCurrentTimestamp()}
+			msg := &Message{Sender: nodeinfo.NodeName, Receiver: text, Kind: a[0], Value: a[1], Timestamp: getCurrentTimestamp()}
 			b, err := json.Marshal(msg)
 			if err != nil {
 				fmt.Printf("Error: %s", err)
@@ -37,9 +36,8 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			fmt.Print(string(b) + "\n")
 			//nodeSend(soc, string(b))
 
-		}
-		else if input=="r" {
-			temp := nodeReceive(soc)
+		} else if input=="r" {
+			tmp := nodeReceive(self)
 			res := []byte(tmp)
 			var test Message
 			json.Unmarshal(res,&test)
@@ -49,9 +47,10 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			fmt.Print("value: " + test.Value)
 			fmt.Print("sender: " + test.Sender)
 
-		}
-		else if input=="g"{
-			fmt.print(generateCandidate())
+		} else if input=="g"{
+			println(generateCandidate().Text(10))
+		} else {
+			println("Bad Input!")
 		}
 	}
 }

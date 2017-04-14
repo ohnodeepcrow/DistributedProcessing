@@ -16,7 +16,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 	for {
 		fmt.Print("(s)end/(r)eceive/(g)enerate")
 		input, _ := reader.ReadString('\n')
-		if (input == "s") {
+		if input == "s" {
 			fmt.Print("Enter Receiver:")
 
 			fmt.Print("->\n")
@@ -38,12 +38,12 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			//nodeSend(soc, string(b))
 
 		}
-		else if(input=="r"){
+		else if input=="r" {
 
 		}
 
-		else if(input=="g"){
-		fmt.print(generateCandidate())
+		else if input=="g"{
+			fmt.print(generateCandidate())
 		}
 	}
 }

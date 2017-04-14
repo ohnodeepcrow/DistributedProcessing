@@ -13,18 +13,17 @@ import (
 func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 	reader :=bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print("(s)end/(r)eceive/(g)enerate")
+		fmt.Print("(s)end/(r)eceive/(g)enerate\n")
 		input, _ := reader.ReadString('\n')
+		input= strings.Trim(input, "\n")
 		if input == "s" {
-			fmt.Print("Enter Receiver:")
-
-			fmt.Print("->\n")
+			fmt.Print("Enter Receiver:\n")
 			text, _ := reader.ReadString('\n')
-			fmt.Print("Enter Kind and Value:")
-			fmt.Print("->\n")
+			text= strings.Trim(text, "\n")
+			fmt.Print("Enter Kind and Value:\n")
 			text1, _ := reader.ReadString('\n')
 			var a [2]string
-			a[0] = strings.Split(text, " ")[0]
+			a[0] = strings.Split(text1, " ")[0]
 			a[1] = strings.Trim(strings.Split(text1, " ")[1], "\n")
 
 			msg := &Message{Sender: nodeinfo.NodeName, Receiver: text, Kind: a[0], Value: a[1], Timestamp: getCurrentTimestamp()}

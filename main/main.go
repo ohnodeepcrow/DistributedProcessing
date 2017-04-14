@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"github.com/pebbe/zmq4"
+	zmq4 "github.com/pebbe/zmq4"
 	"time"
 )
 

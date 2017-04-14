@@ -23,7 +23,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 		a[0] = strings.Split(text, " ")[0]
 		a[1] = strings.Trim(strings.Split(text1, " ")[1],"\n")
 
-		msg := &Message{sender: nodeinfo.NodeName, receiver: text,kind:a[0],value:a[1], timestamp:time.Now().Format("15:04:05")}
+		msg := &Message{sender: nodeinfo.NodeName, receiver: text,kind:a[0],value:a[1], timestamp:getCurrentTimestamp()}
 		b, err := json.Marshal(msg)
 		if err != nil {
 			fmt.Printf("Error: %s", err)

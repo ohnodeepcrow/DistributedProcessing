@@ -6,6 +6,7 @@ import (
 )
 
 type NodeSocket struct {
+	recvq			[]string
 	sendsock		*zmq4.Socket
 	recvsock		*zmq4.Socket
 	leader			bool
@@ -51,23 +52,19 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 }
 
 func nodeSend(str string, soc NodeSocket) error{
-	out := str + " | " + getCurrentTimestamp()
-	_, err := soc.sendsock.Send(out, 0)
+	_, err := soc.sendsock.Send(str, 0)
 	return err
 
 }
 
-func nodeReceive(soc NodeSocket) string{
-	ret := ""
+func nodeReceive(soc NodeSocket){
 	for i := 0; i < 1000000; i++{
 		tmp,err := soc.recvsock.Recv(zmq4.DONTWAIT)
 		if err == syscall.EAGAIN {
 			continue
 		}
 		if tmp != "" {
-			ret += tmp + "\n";
+			soc.recvq = append(soc.recvq, tmp)
 		}
-
 	}
-	return ret
 }

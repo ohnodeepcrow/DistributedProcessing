@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/pebbe/zmq4"
+	"time"
 	"syscall"
 )
 
@@ -9,7 +10,6 @@ type NodeSocket struct {
 	sendsock		*zmq4.Socket
 	recvsock		*zmq4.Socket
 	leader			bool
-	recvq			[]string
 }
 
 func establishLeader(context *zmq4.Context, self NodeInfo) NodeSocket{
@@ -51,21 +51,24 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	return ret
 }
 
-
-
-func nodeSend(out string, soc NodeSocket) error{
+func nodeSend(str string, soc NodeSocket) error{
+	out := str + " | " + getCurrentTimestamp()
 	_, err := soc.sendsock.Send(out, 0)
 	return err
+
 }
 
-func nodeReceive(soc NodeSocket){
+func nodeReceive(soc NodeSocket) string{
+	ret := ""
 	for i := 0; i < 1000000; i++{
 		tmp,err := soc.recvsock.Recv(zmq4.DONTWAIT)
 		if err == syscall.EAGAIN {
 			continue
 		}
 		if tmp != "" {
-			soc.recvq = append(soc.recvq, tmp)
+			ret += tmp + "\n";
 		}
+
 	}
+	return ret
 }

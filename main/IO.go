@@ -39,9 +39,17 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 
 		}
 		else if input=="r" {
+			temp := nodeReceive(soc)
+			res := []byte(tmp)
+			var test Message
+			json.Unmarshal(res,&test)
+
+			fmt.Print("===============Receive Message==========")
+			fmt.Print("kind: " + test.Kind)
+			fmt.Print("value: " + test.Value)
+			fmt.Print("sender: " + test.Sender)
 
 		}
-
 		else if input=="g"{
 			fmt.print(generateCandidate())
 		}

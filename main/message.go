@@ -1,6 +1,5 @@
 package main
 
-
 type Message struct{
 	sender string
 	receiver string

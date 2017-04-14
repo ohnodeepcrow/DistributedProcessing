@@ -11,8 +11,11 @@ import (
 
 )
 type Message struct{
-	Kind string
-	Value string
+	sender string
+	receiver string
+	kind string
+	value string
+	timestamp string
 }
 func main(){
 	if len(os.Args) < 3{
@@ -25,33 +28,30 @@ func main(){
 	self := getNodeInfo(selfstr, configs)
 	println(self.NodeName)
 	println(self.NodeAddr)
-	println(self.NodePort)
+	println(self.SendPort)
+	println(self.RecvPort)
 	println(self.NodeGroup)
 	cntxt,_ := zmq4.NewContext()
 	reader :=bufio.NewReader(os.Stdin)
-	if self.NodeName == "leader"{
-		soc := configPub(cntxt, self)
-		for {
-			fmt.Print("kind and value:")
-			fmt.Print("->\n")
-			text, _ := reader.ReadString('\n')
-			var a [2]string
-			a[0] = strings.Split(text, " ")[0]
-			a[1] = strings.Trim(strings.Split(text, " ")[1],"\n")
-			msg := &Message{Kind:"prime",Value:a[1]}
-			b, err := json.Marshal(msg)
-			if err != nil {
-				fmt.Printf("Error: %s", err)
-				return;
-			}
-			fmt.Print(string(b)+"\n")
-			sendPub(soc, string(b))
-		}
-	} else {
-		soc := configSub(cntxt)
-		receiveSub(soc)
-	}
+	for {	fmt.Print("Enter Receiver:")
+		fmt.Print("->\n")
+		text, _ := reader.ReadString('\n')
+		fmt.Print("Enter Kind and Value:")
+		fmt.Print("->\n")
+		text1, _ := reader.ReadString('\n')
+		var a [2]string
+		a[0] = strings.Split(text, " ")[0]
+		a[1] = strings.Trim(strings.Split(text1, " ")[1],"\n")
 
+		msg := &Message{sender: self.NodeName, receiver: text,kind:a[0],value:a[1], timestamp:time.Now().Format("15:04:05")}
+		b, err := json.Marshal(msg)
+		if err != nil {
+			fmt.Printf("Error: %s", err)
+			return;
+		}
+		fmt.Print(string(b)+"\n")
+		//nodeSend(soc, string(b))
+	}
 
 }
 
@@ -59,52 +59,4 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func configPub(context *zmq4.Context, self NodeInfo) *zmq4.Socket{
-	soc, err := context.NewSocket(zmq4.PUB)
-	check(err)
-	endpoint := "tcp://" + self.NodeAddr + ":" + self.NodePort
-	//epgm://[IP of local interface];[multicast group IP]:[multicast port]
-	soc.Bind(endpoint)
-	return soc
-}
-
-func sendPub(soc *zmq4.Socket, msg string){
-
-
-	soc.Send(msg, 0)
-	time.Sleep(time.Duration(time.Second)*2)
-
-}
-
-func configSub(context *zmq4.Context) *zmq4.Socket{
-	soc, err := context.NewSocket(zmq4.SUB)
-	check(err)
-	soc.Connect("tcp://127.0.0.1:13370")
-	soc.SetSubscribe("")
-	return soc
-}
-
-func receiveSub(soc *zmq4.Socket){
-
-	for{
-		tmp,_ := soc.Recv(0)
-
-		res := []byte(tmp)
-		var test Message
-		json.Unmarshal(res,&test)
-		fmt.Print("Kind: "+test.Kind +"\n")
-		fmt.Print("Value: "+test.Value +"\n")
-
-	}
-}
-
-func getNodeInfo(self string, config Configs) NodeInfo{
-	for i := 0; i < len(config.Nodes); i++ {
-		if config.Nodes[i].NodeName == self{
-			return config.Nodes[i]
-		}
-	}
-	panic("Node doesn't exist!")
 }

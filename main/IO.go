@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"github.com/pebbe/zmq4"
+	"time"
 	"encoding/json"
 	"bufio"
 	"strings"
@@ -37,8 +38,8 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			//nodeSend(soc, string(b))
 
 		} else if input=="r" {
-			tmp := nodeReceive(self)
-			res := []byte(tmp)
+			temp := nodeReceive(self)
+			res := []byte(temp)
 			var test Message
 			json.Unmarshal(res,&test)
 
@@ -48,9 +49,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			fmt.Print("sender: " + test.Sender)
 
 		} else if input=="g"{
-			println(generateCandidate().Text(10))
-		} else {
-			println("Bad Input!")
+			fmt.Print(generateCandidate())
 		}
 	}
 }

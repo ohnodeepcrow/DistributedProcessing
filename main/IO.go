@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"github.com/pebbe/zmq4"
-	"time"
 	"encoding/json"
 	"bufio"
 	"strings"

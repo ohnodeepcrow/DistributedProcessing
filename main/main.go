@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	zmq4 "github.com/pebbe/zmq4"
-	"time"
 )
 
 func main(){
@@ -15,46 +14,18 @@ func main(){
 	selfstr := os.Args[2]
 	var configs Configs = ReadConfig(configfile)
 	self := getNodeInfo(selfstr, configs)
-	println(self.NodeName)
-	println(self.NodeAddr)
-	println(self.SendPort)
-	println(self.RecvPort)
-	println(self.NodeGroup)
+	leader := getNodeInfo("leader", configs)
+	println("Running as " + self.NodeName)
+	println("IP: " + self.NodeAddr)
+	println("Port1: " + self.SendPort)
+	println("Port2: " + self.RecvPort)
+	println("Group: " + self.NodeGroup)
 	cntxt,_ := zmq4.NewContext()
+	var ns NodeSocket
 	if self.NodeName == "leader"{
-		nsoc := establishLeader(cntxt, self)
-		for {
-			nodeSend(self.NodeName, nsoc.sendsock)
-			time.Sleep(time.Second)
-			rcvd := nodeReceive(nsoc.recvsock)
-			time.Sleep(time.Second)
-			println(rcvd)
-		}
+		ns = establishLeader(cntxt, self)
 	} else {
-		nsoc := establishMember(cntxt, self, getNodeInfo("leader", configs))
-		for {
-			nodeSend(self.NodeName, nsoc.sendsock)
-			time.Sleep(time.Second)
-			rcvd := nodeReceive(nsoc.recvsock)
-			time.Sleep(time.Second)
-			println(rcvd)
-		}
+		ns = establishMember(cntxt, self, leader)
 	}
-
-
-}
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-func getNodeInfo(self string, config Configs) NodeInfo{
-	for i := 0; i < len(config.Nodes); i++ {
-		if config.Nodes[i].NodeName == self{
-			return config.Nodes[i]
-		}
-	}
-	panic("Node doesn't exist!")
+	startIO(cntxt, ns)
 }

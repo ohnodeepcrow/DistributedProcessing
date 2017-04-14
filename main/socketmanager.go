@@ -54,7 +54,7 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 
 
 func nodeSend(str string, soc *zmq4.Socket) error{
-	out := str + " | " + time.Now().Format("15:04:05")
+	out := str + " | " + getCurrentTimestamp()
 	_, err := soc.Send(out, 0)
 	return err
 

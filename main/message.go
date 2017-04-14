@@ -1,6 +1,10 @@
 package main
 
+
 type Message struct{
-	Kind string
-	Value string
+	sender string
+	receiver string
+	kind string
+	value string
+	timestamp string
 }

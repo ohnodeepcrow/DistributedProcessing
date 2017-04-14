@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	zmq4 "github.com/pebbe/zmq4"
-	"time"
 )
 
 func main(){
@@ -28,5 +27,5 @@ func main(){
 	} else {
 		ns = establishMember(cntxt, self, leader)
 	}
-	
+	startIO(cntxt, ns)
 }

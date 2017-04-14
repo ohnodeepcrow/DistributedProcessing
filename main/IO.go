@@ -10,28 +10,8 @@ import (
 	"fmt"
 
 )
-type Message struct{
-	sender string
-	receiver string
-	kind string
-	value string
-	timestamp string
-}
-func main(){
-	if len(os.Args) < 3{
-		println("Need to pass in config file location and node name!")
-		return
-	}
-	configfile := os.Args[1]
-	selfstr := os.Args[2]
-	var configs Configs = ReadConfig(configfile)
-	self := getNodeInfo(selfstr, configs)
-	println(self.NodeName)
-	println(self.NodeAddr)
-	println(self.SendPort)
-	println(self.RecvPort)
-	println(self.NodeGroup)
-	cntxt,_ := zmq4.NewContext()
+
+func startIO(cntxt *zmq4.Context, self NodeSocket){
 	reader :=bufio.NewReader(os.Stdin)
 	for {	fmt.Print("Enter Receiver:")
 		fmt.Print("->\n")
@@ -53,10 +33,4 @@ func main(){
 		//nodeSend(soc, string(b))
 	}
 
-}
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
 }

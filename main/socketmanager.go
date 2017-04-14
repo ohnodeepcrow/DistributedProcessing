@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pebbe/zmq4"
 	"time"
+	"syscall"
 )
 
 type NodeSocket struct {
@@ -52,19 +53,24 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 
 
 
-func nodeSend(str string, soc *zmq4.Socket){
+func nodeSend(str string, soc *zmq4.Socket) error{
 	out := str + " | " + time.Now().Format("15:04:05")
-	soc.Send(out, 0)
+	_, err := soc.Send(out, 0)
+	return err
+
 }
 
-func nodeReceive(soc *zmq4.Socket){
-	oldtmp := ""
+func nodeReceive(soc *zmq4.Socket) string{
+	ret := ""
 	for i := 0; i < 1000000; i++{
-		tmp,_ := soc.Recv(zmq4.DONTWAIT)
-		if tmp != oldtmp {
-			println("Received: " + tmp)
-			oldtmp = tmp
+		tmp,err := soc.Recv(zmq4.DONTWAIT)
+		if err == syscall.EAGAIN {
+			continue
+		}
+		if tmp != "" {
+			ret += tmp + "\n";
 		}
 
 	}
+	return ret
 }

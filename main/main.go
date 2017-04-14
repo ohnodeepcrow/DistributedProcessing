@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"github.com/pebbe/zmq4"
+	"time"
 )
 
 func main(){
@@ -24,13 +25,19 @@ func main(){
 		nsoc := establishLeader(cntxt, self)
 		for {
 			nodeSend(self.NodeName, nsoc.sendsock)
-			nodeReceive(nsoc.recvsock)
+			time.Sleep(time.Second)
+			rcvd := nodeReceive(nsoc.recvsock)
+			time.Sleep(time.Second)
+			println(rcvd)
 		}
 	} else {
 		nsoc := establishMember(cntxt, self, getNodeInfo("leader", configs))
 		for {
 			nodeSend(self.NodeName, nsoc.sendsock)
-			nodeReceive(nsoc.recvsock)
+			time.Sleep(time.Second)
+			rcvd := nodeReceive(nsoc.recvsock)
+			time.Sleep(time.Second)
+			println(rcvd)
 		}
 	}
 

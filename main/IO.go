@@ -37,7 +37,12 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 
 		} else if input=="r" {
 			nodeReceive(self)
-			for ind,s := range self.recvq{
+			ml := MQpopAll(self.recvq)
+			if ml.Front() == nil{
+				fmt.Println("No Messages!")
+			}
+			for n :=  ml.Front(); n != nil ; n = n.Next(){
+				s := fmt.Sprint(n.Value)
 				if s == "" {
 					continue
 				}
@@ -45,7 +50,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 				var test Message
 
 				json.Unmarshal(res,&test)
-				self.recvq[ind] = ""
+
 				fmt.Print("===============Receive Message==========")
 				fmt.Print("kind: " + test.Kind)
 				fmt.Print("value: " + test.Value)
@@ -53,7 +58,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 				fmt.Println()
 			}
 		} else if input=="g"{
-			fmt.Print(generateCandidate())
+			fmt.Println(generateCandidate())
 		}
 	}
 }

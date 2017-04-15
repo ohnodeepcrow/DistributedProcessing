@@ -40,7 +40,7 @@ func main(){
 		ns = establishMember(cntxt, self, leader)
 	}
 	go startIO(cntxt, ns, self)
-	go startReceiver()
+	go startReceiver(ns)
 
 	wg.Wait()
 }

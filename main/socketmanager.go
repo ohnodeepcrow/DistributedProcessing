@@ -6,6 +6,7 @@ import (
 )
 
 type NodeSocket struct {
+	appq	 mutexQueue
 	recvq    mutexQueue
 	sendsock *zmq4.Socket
 	recvsock *zmq4.Socket

@@ -15,7 +15,7 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			metric := testPrime(*num)
 			ms:=metricString(metric)
 			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply")
-			fmt.Print(string(msg) + "\n")
+			//fmt.Print(string(msg) + "\n")
 			nodeSend(msg,self)
 		} else if m.Kind == "Prime" && m.Type== "Reply" {
 			MQpush(self.appq, m)

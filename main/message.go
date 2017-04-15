@@ -6,4 +6,5 @@ type Message struct{
 	Kind string
 	Value string
 	Timestamp string
+	Type string
 }

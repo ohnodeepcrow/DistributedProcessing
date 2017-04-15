@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"time"
+	"strconv"
+)
 
 func getCurrentTimestamp() string{
 	return time.Now().Format("15:04:05")
@@ -19,4 +22,11 @@ func getNodeInfo(self string, config Configs) NodeInfo{
 		}
 	}
 	panic("Node doesn't exist!")
+}
+
+func metricString (m metric) string{
+	a:=strconv.FormatBool(m.IsPrime)
+	b:=strconv.Itoa(m.Perf)
+	c:=a+"\n"+b
+	return c
 }

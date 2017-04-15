@@ -33,7 +33,6 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 
 
 		} else if input=="r" {
-			nodeReceive(self)
 			ml := MQpopAll(self.recvq)
 			if ml.Front() == nil{
 				fmt.Println("No Messages!")

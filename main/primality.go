@@ -6,6 +6,10 @@ import (
 	"fmt"
 )
 
+type metric struct {
+	Perf int
+	IsPrime bool
+}
 var effort int
 func generateCandidate() *big.Int{
 	tmp := rand.Int63()
@@ -18,8 +22,11 @@ func generateCandidate() *big.Int{
 func setEffort(i int){
 	effort=i
 }
-func testPrime(num big.Int,effort int) bool{
+func testPrime(num big.Int) metric{
+	var m metric
+	m.Perf= effort
 	isPrime := num.ProbablyPrime(effort)
+	m.IsPrime=isPrime
 	fmt.Println(isPrime)
-	return isPrime
+	return m
 }

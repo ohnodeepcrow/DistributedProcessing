@@ -3,6 +3,7 @@ import (
 	"strconv"
 	"math/big"
 	"fmt"
+	"time"
 )
 
 
@@ -28,6 +29,7 @@ func LeadNodeRec(self NodeSocket, m string){
 }
 
 func MessageHandler(node NodeInfo, self NodeSocket){
+
 	s := MQpop(self.recvq)
 	if s == nil{
 		return
@@ -37,7 +39,7 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 	if m.Receiver == node.NodeName {
 		processRequest(node, self, message)
 	} else if self.leader == true {
-			println("Retransmitting " + message)
+			//println("Retransmitting " + message)
 			LeadNodeRec(self, message)
 	} else {
 		return //drop message
@@ -46,6 +48,7 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 
 func startMessageHandler(node NodeInfo, self NodeSocket){
 	for{
+		time.Sleep(time.Millisecond*50)
 		MessageHandler(node,self)
 	}
 }

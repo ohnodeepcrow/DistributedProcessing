@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pebbe/zmq4"
 	"syscall"
+	"time"
 )
 
 type NodeSocket struct {
@@ -72,6 +73,7 @@ func nodeReceive(soc NodeSocket){
 		if tmp != "" {
 			MQpush(soc.recvq, tmp)
 		}
+		time.Sleep(time.Millisecond*50)
 	}
 }
 

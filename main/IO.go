@@ -33,7 +33,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 				return;
 			}
 			fmt.Print(string(b) + "\n")
-			//nodeSend(soc, string(b))
+			nodeSend(self, string(b))
 
 		} else if input=="r" {
 			nodeReceive(self)

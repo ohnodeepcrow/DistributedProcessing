@@ -11,6 +11,7 @@ func LeadNodeRec(input string){
 	if (test.Type == "req"){
 		msg := &Message{Sender: test.Sender, Receiver: test.Receiver, Kind: test.Kind, Value: test.Value, Timestamp: getCurrentTimestamp(),Type: "req"}
 		b, err := json.Marshal(msg)
+		check(err)
 		//nodeSend(string(b))
 
 	}

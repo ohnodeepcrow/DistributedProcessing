@@ -30,7 +30,6 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			nodeSend(string(msg), self) // if leader--> group, if member-->leader
 
 		} else if input=="r" {
-			nodeReceive(self)
 			ml := MQpopAll(self.recvq)
 			if ml.Front() == nil{
 				fmt.Println("No Messages!")

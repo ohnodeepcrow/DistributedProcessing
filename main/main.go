@@ -41,6 +41,7 @@ func main(){
 	}
 	go startIO(cntxt, ns, self)
 	go startReceiver(ns)
+	go startMessageHandler(self, ns)
 
 	wg.Wait()
 }

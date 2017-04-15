@@ -14,7 +14,7 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			num:=big.NewInt(i)
 			metric := testPrime(*num)
 			ms:=metricString(metric)
-			msg := encode(self, m.Sender,m.Kind,ms, "Reply")
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply")
 			fmt.Print(string(msg) + "\n")
 			//send
 		} else if m.Kind == "Prime" && m.Type== "Reply" {

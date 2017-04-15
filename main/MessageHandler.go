@@ -1,14 +1,14 @@
 package main
 import (
-	"encoding/json"
 	"strconv"
 	"math/big"
 	"fmt"
 )
 
 
-func processRequest(self string, m Message) {
-	if m.Receiver == self{
+func processRequest(node NodeInfo, self NodeSocket, input string) {
+	m:= decode(input)
+	if m.Receiver == node.NodeName{
 		if m.Kind == "Prime" && m.Type== "Request"{
 			i,_:= strconv.ParseInt(m.Value,10,64)
 			num:=big.NewInt(i)
@@ -25,14 +25,20 @@ func processRequest(self string, m Message) {
 }
 
 /*Lead node will call this function after it received a message from a node. It will use send to retransmit the node. */
-func LeadNodeRec(input string){
-	res := []byte(input)
-	var test Message
+func LeadNodeRec(self NodeSocket, m string){
+	message:= decode(m)
+	if message.Type == "Request"{
+		nodeSend(m,self)
 
-	json.Unmarshal(res,&test)
-	if test.Type == "Request"{
-		msg := encode(test.Sender, test.Receiver, test.Kind, test.Value,"Request")
-		nodeSend(string(msg))
+	}
+}
 
+func startMessageHandler(node NodeInfo, self NodeSocket){
+	s:=MQpop(self.recvq)
+	message:= fmt.Sprint(s)
+	if self.leader==true{
+		LeadNodeRec(self,message)
+	} else{
+		processRequest(node,self,message)
 	}
 }

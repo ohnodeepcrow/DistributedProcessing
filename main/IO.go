@@ -35,7 +35,9 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 				return;
 			}
 			fmt.Print(string(b) + "\n")
-			nodeSend(self, string(b))
+
+			nodeSend(string(b), self) // if leader--> group, if member-->leader
+
 
 		} else if input=="r" {
 			nodeReceive(self)

@@ -30,7 +30,7 @@ func LeadNodeRec(input string){
 	var test Message
 
 	json.Unmarshal(res,&test)
-	if (test.Type == "Request"){
+	if test.Type == "Request"{
 		msg := encode(test.Sender, test.Receiver, test.Kind, test.Value,"Request")
 		nodeSend(string(msg))
 

@@ -30,17 +30,12 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			nodeSend(string(msg), self) // if leader--> group, if member-->leader
 
 		} else if input=="r" {
-			ml := MQpopAll(self.recvq)
+			ml := MQpopAll(self.appq)
 			if ml.Front() == nil{
 				fmt.Println("No Messages!")
 			}
 			for n :=  ml.Front(); n != nil ; n = n.Next(){
-				s := fmt.Sprint(n.Value)
-				if s == "" {
-					continue
-				}
-
-				test:=decode(s)
+				test := n.Value.(Message)
 
 				fmt.Print("===============Receive Message==========")
 				fmt.Print("kind: " + test.Kind)

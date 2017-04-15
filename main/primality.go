@@ -27,6 +27,6 @@ func testPrime(num big.Int) metric{
 	m.Perf= effort
 	isPrime := num.ProbablyPrime(effort)
 	m.IsPrime=isPrime
-	fmt.Println(isPrime)
+	//fmt.Println(isPrime)
 	return m
 }

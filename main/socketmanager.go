@@ -60,7 +60,7 @@ func nodeSend(str string, soc NodeSocket) error{
 }
 
 func nodeReceive(soc NodeSocket){
-	for i := 0; i < 1000000; i++{
+	for {
 		tmp,err := soc.recvsock.Recv(zmq4.DONTWAIT)
 		if err == syscall.EAGAIN {
 			continue
@@ -72,7 +72,5 @@ func nodeReceive(soc NodeSocket){
 }
 
 func startReceiver(soc NodeSocket){
-	for{
-		nodeReceive(soc)
-	}
+	nodeReceive(soc)
 }

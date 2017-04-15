@@ -29,11 +29,15 @@ func LeadNodeRec(self NodeSocket, m string){
 
 func MessageHandler(node NodeInfo, self NodeSocket){
 	s := MQpop(self.recvq)
+	if s == nil{
+		return
+	}
 	message := fmt.Sprint(s)
 	m:= decode(message)
 	if m.Receiver == node.NodeName {
 		processRequest(node, self, message)
 	} else if self.leader == true {
+			println("Retransmitting " + message)
 			LeadNodeRec(self, message)
 	} else {
 		return //drop message

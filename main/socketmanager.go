@@ -30,6 +30,7 @@ func establishLeader(context *zmq4.Context, self NodeInfo) NodeSocket{
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
 	ret.recvq = newMutexQueue()
+	ret.appq = newMutexQueue()
 	return ret
 }
 
@@ -51,11 +52,13 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
 	ret.recvq = newMutexQueue()
+	ret.appq = newMutexQueue()
 	return ret
 }
 
 func nodeSend(str string, soc NodeSocket) error{
 	_, err := soc.sendsock.Send(str, 0)
+	check(err)
 	return err
 
 }

@@ -37,10 +37,10 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			for n :=  ml.Front(); n != nil ; n = n.Next(){
 				test := n.Value.(Message)
 
-				fmt.Print("===============Receive Message==========")
-				fmt.Print("kind: " + test.Kind)
-				fmt.Print("value: " + test.Value)
-				fmt.Print("sender: " + test.Sender)
+				fmt.Println("===============Receive Message==========")
+				fmt.Println("kind: " + test.Kind)
+				fmt.Println("value: " + test.Value)
+				fmt.Println("sender: " + test.Sender)
 				fmt.Println()
 			}
 		} else if input=="g"{

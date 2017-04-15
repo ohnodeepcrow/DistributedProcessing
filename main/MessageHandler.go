@@ -14,13 +14,8 @@ func processRequest(self string, m Message) {
 			num:=big.NewInt(i)
 			metric := testPrime(*num)
 			ms:=metricString(metric)
-			msg := &Message{Sender: self, Receiver: m.Sender, Kind: m.Kind, Value: ms, Timestamp: getCurrentTimestamp(), Type:"Reply"}
-			b, err := json.Marshal(msg)
-			if err != nil {
-				fmt.Printf("Error: %s", err)
-				return
-			}
-			fmt.Print(string(b) + "\n")
+			msg := encode(self, m.Sender,m.Kind,ms, "Reply")
+			fmt.Print(string(msg) + "\n")
 			//send
 		} else if m.Kind == "Prime" && m.Type== "Reply" {
 			//print the reply
@@ -35,10 +30,9 @@ func LeadNodeRec(input string){
 	var test Message
 
 	json.Unmarshal(res,&test)
-	if (test.Type == "req"){
-		msg := &Message{Sender: test.Sender, Receiver: test.Receiver, Kind: test.Kind, Value: test.Value, Timestamp: getCurrentTimestamp(),Type: "req"}
-		b, err := json.Marshal(msg)
-		//nodeSend(string(b))
+	if (test.Type == "Request"){
+		msg := encode(test.Sender, test.Receiver, test.Kind, test.Value,"Request")
+		nodeSend(string(msg))
 
 	}
 }

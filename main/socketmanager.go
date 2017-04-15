@@ -6,10 +6,10 @@ import (
 )
 
 type NodeSocket struct {
-	recvq			[]string
-	sendsock		*zmq4.Socket
-	recvsock		*zmq4.Socket
-	leader			bool
+	recvq    mutexQueue
+	sendsock *zmq4.Socket
+	recvsock *zmq4.Socket
+	leader   bool
 }
 
 func establishLeader(context *zmq4.Context, self NodeInfo) NodeSocket{
@@ -28,6 +28,7 @@ func establishLeader(context *zmq4.Context, self NodeInfo) NodeSocket{
 	ret.leader = true
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
+	ret.recvq = newMutexQueue()
 	return ret
 }
 
@@ -48,6 +49,7 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	ret.leader = false
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
+	ret.recvq = newMutexQueue()
 	return ret
 }
 
@@ -64,7 +66,13 @@ func nodeReceive(soc NodeSocket){
 			continue
 		}
 		if tmp != "" {
-			soc.recvq = append(soc.recvq, tmp)
+			MQpush(soc.recvq, tmp)
 		}
+	}
+}
+
+func startReceiver(soc NodeSocket){
+	for{
+		nodeReceive(soc)
 	}
 }

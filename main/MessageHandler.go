@@ -3,6 +3,7 @@ import (
 	"strconv"
 	"math/big"
 	"fmt"
+	"time"
 )
 
 
@@ -14,7 +15,7 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			metric := testPrime(*num)
 			ms:=metricString(metric)
 			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply")
-			fmt.Print(string(msg) + "\n")
+			//fmt.Print(string(msg) + "\n")
 			nodeSend(msg,self)
 		} else if m.Kind == "Prime" && m.Type== "Reply" {
 			MQpush(self.appq, m)
@@ -28,6 +29,7 @@ func LeadNodeRec(self NodeSocket, m string){
 }
 
 func MessageHandler(node NodeInfo, self NodeSocket){
+
 	s := MQpop(self.recvq)
 	if s == nil{
 		return
@@ -37,7 +39,7 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 	if m.Receiver == node.NodeName {
 		processRequest(node, self, message)
 	} else if self.leader == true {
-			println("Retransmitting " + message)
+			//println("Retransmitting " + message)
 			LeadNodeRec(self, message)
 	} else {
 		return //drop message
@@ -46,6 +48,7 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 
 func startMessageHandler(node NodeInfo, self NodeSocket){
 	for{
+		time.Sleep(time.Millisecond*50)
 		MessageHandler(node,self)
 	}
 }

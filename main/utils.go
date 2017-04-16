@@ -27,6 +27,6 @@ func getNodeInfo(self string, config Configs) NodeInfo{
 func metricString (m metric) string{
 	a:=strconv.FormatBool(m.IsPrime)
 	b:=strconv.Itoa(m.Perf)
-	c:=a+"\n"+b
+	c:="Prime:"+a+"\n"+"Performance Hit:"+b
 	return c
 }

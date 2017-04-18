@@ -33,6 +33,7 @@ func main(){
 	cntxt,_ := zmq4.NewContext()
 	eff, _ := strconv.Atoi(self.Effort)
 	setEffort(eff)
+	setDict()
 	var ns NodeSocket
 	if self.NodeName == "leader"{
 		ns = establishLeader(cntxt, self)

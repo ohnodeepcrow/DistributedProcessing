@@ -8,15 +8,17 @@ import (
 	"time"
 	"math/rand"
 )
+var run int
+var file string
 
 
 func crackHash(hashToCrack string) (metric) {
 
 	foundHash := false
-	run:=rand.Intn(4-0) + 0
-	file:="dict.txt"
 
-	if run==0{
+
+
+	if run==4{
 		file ="dict1.txt"
 	} else if run==1{
 		file ="dict2.txt"
@@ -24,6 +26,8 @@ func crackHash(hashToCrack string) (metric) {
 		file ="dict3.txt"
 	}else if run==3{
 		file ="dict4.txt"
+	}else{
+		file="dict.txt"
 	}
 	fmt.Println(file)
 
@@ -80,4 +84,8 @@ func getMD5HashForString(userString string) string {
 	hash.Write([]byte(userString))
 
 	return hex.EncodeToString(hash.Sum(nil))
+}
+func setDict(){
+	rand.Seed(time.Now().UTC().UnixNano())
+	run =rand.Intn(4-0) + 0
 }

@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"math/rand"
 	_ "fmt"
+	"time"
 )
 
 
@@ -18,6 +19,7 @@ func generateCandidate() *big.Int{
 
 func setEffort(i int){
 	effort=i
+	rand.Seed(time.Now().UTC().UnixNano())
 }
 func testPrime(num big.Int) metric{
 	var m metric

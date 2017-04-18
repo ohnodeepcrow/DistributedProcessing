@@ -6,14 +6,28 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"time"
+	"math/rand"
 )
 
 
 func crackHash(hashToCrack string) (metric) {
-	inFile, ioErr := os.Open("dict.txt")
-	foundHash := false
 
-	fmt.Println("hi")
+	foundHash := false
+	run:=rand.Intn(4-0) + 0
+	file:="dict.txt"
+
+	if run==0{
+		file ="dict1.txt"
+	} else if run==1{
+		file ="dict2.txt"
+	}else if run==2{
+		file ="dict3.txt"
+	}else if run==3{
+		file ="dict4.txt"
+	}
+	fmt.Println(file)
+
+	inFile, ioErr := os.Open(file)
 
 	if ioErr != nil{
 		fmt.Println(ioErr)

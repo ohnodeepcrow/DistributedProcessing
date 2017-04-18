@@ -21,8 +21,9 @@ func setEffort(i int){
 }
 func testPrime(num big.Int) metric{
 	var m metric
-	m.Perf= effort
-	isPrime := num.ProbablyPrime(effort)
+	run:=rand.Intn(effort-0) + 0
+	m.Perf= run
+	isPrime := num.ProbablyPrime(run)
 	m.IsPrime=isPrime
 	//fmt.Println(isPrime)
 	return m

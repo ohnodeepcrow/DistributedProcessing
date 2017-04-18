@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type Message struct{
@@ -12,10 +13,18 @@ type Message struct{
 	Value string
 	Timestamp string
 	Type string
+	Result metric
 }
 
-func encode(sender string,receiver string,kind string, value string,typ string) string{
-	msg := &Message{Sender: sender, Receiver: receiver, Kind: kind, Value: value, Timestamp: getCurrentTimestamp(), Type:typ}
+type metric struct {
+	Perf int
+	IsPrime bool
+	hPerf time.Duration
+	Hash string
+}
+
+func encode(sender string,receiver string,kind string, value string,typ string, m metric) string{
+	msg := &Message{Sender: sender, Receiver: receiver, Kind: kind, Value: value, Timestamp: getCurrentTimestamp(), Type:typ, Result:m}
 	b, err := json.Marshal(msg)
 	if err != nil {
 		fmt.Printf("Error: %s", err)

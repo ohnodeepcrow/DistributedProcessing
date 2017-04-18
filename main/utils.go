@@ -30,3 +30,10 @@ func metricString (m metric) string{
 	c:="Prime:"+a+"\n"+"Performance Hit:"+b
 	return c
 }
+
+func hmetricString (m metric) string{
+	a:=m.Hash
+	b:=m.hPerf.String()
+	c:="Preimage:"+a+"\n"+"Performance Hit:"+b
+	return c
+}

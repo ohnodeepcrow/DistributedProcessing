@@ -14,14 +14,22 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			num:=big.NewInt(i)
 			metric := testPrime(*num)
 			ms:=metricString(metric)
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply")
+
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric)
 			//fmt.Print(string(msg) + "\n")
 			nodeSend(msg,self)
-		} else if m.Kind == "Prime" && m.Type== "Reply" {
+		} else if m.Kind == "Hash" && m.Type== "Request"{
+			metric := crackHash(m.Value)
+			ms:=hmetricString(metric)
+
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric)
+			//fmt.Print(string(msg) + "\n")
+			nodeSend(msg,self)
+		} else if m.Type== "Reply" {
 			MQpush(self.appq, m)
 		}
-
 }
+
 
 /*Lead node will call this function after it received a message from a node. It will use send to retransmit the node. */
 func LeadNodeRec(self NodeSocket, m string){

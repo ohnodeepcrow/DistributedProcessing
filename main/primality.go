@@ -3,13 +3,10 @@ package main
 import (
 	"math/big"
 	"math/rand"
-	"fmt"
+	_ "fmt"
 )
 
-type metric struct {
-	Perf int
-	IsPrime bool
-}
+
 var effort int
 func generateCandidate() *big.Int{
 	tmp := rand.Int63()

@@ -89,3 +89,10 @@ func setDict(){
 	rand.Seed(time.Now().UTC().UnixNano())
 	run =rand.Intn(4-0) + 0
 }
+
+func generateHash ()string{
+	hash:= md5.New()
+	hash.Write([]byte(generateCandidate()))
+
+	return hex.EncodeToString(hash.Sum(nil))
+}

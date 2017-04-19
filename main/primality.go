@@ -3,12 +3,10 @@ package main
 import (
 	"math/big"
 	"math/rand"
+	"time"
 )
 
-type metric struct {
-	Perf int
-	IsPrime bool
-}
+
 var effort int
 func generateCandidate() *big.Int{
 	tmp := rand.Int63()
@@ -20,11 +18,13 @@ func generateCandidate() *big.Int{
 
 func setEffort(i int){
 	effort=i
+	rand.Seed(time.Now().UTC().UnixNano())
 }
 func testPrime(num big.Int) metric{
 	var m metric
-	m.Perf= effort
-	isPrime := num.ProbablyPrime(effort)
+	run:=rand.Intn(effort-0) + 0
+	m.Perf= run
+	isPrime := num.ProbablyPrime(run)
 	m.IsPrime=isPrime
 	//fmt.Println(isPrime)
 	return m

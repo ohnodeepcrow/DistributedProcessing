@@ -3,7 +3,6 @@ package main
 import (
 	"math/big"
 	"math/rand"
-	"fmt"
 )
 
 type metric struct {

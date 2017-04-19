@@ -37,7 +37,7 @@ func crackHash(hashToCrack string) (metric) {
 		fmt.Println(ioErr)
 		var dummy metric
 		dummy.hPerf=time.Millisecond*0
-		dummy.Hash=""
+		dummy.Val=""
 		return dummy
 	}
 
@@ -68,11 +68,11 @@ func crackHash(hashToCrack string) (metric) {
 	var h metric
 	if foundHash{
 		h.hPerf=time
-		h.Hash=fileTextLine
+		h.Val=fileTextLine
 		return h
 	}else{
 		h.hPerf=time
-		h.Hash=""
+		h.Val=""
 		return h
 	}
 

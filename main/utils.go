@@ -32,7 +32,7 @@ func metricString (m metric) string{
 }
 
 func hmetricString (m metric) string{
-	a:=m.Hash
+	a:=m.Val
 	b:=m.hPerf.String()
 	c:="Preimage:"+a+"\n"+"Performance Hit:"+b
 	return c

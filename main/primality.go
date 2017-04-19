@@ -9,6 +9,7 @@ import (
 
 var effort int
 func generateCandidate() *big.Int{
+	rand.Seed(time.Now().UTC().UnixNano())
 	tmp := rand.Int63()
 	if tmp % 2 == 0{
 		tmp -= 1
@@ -22,6 +23,7 @@ func setEffort(i int){
 }
 func testPrime(num big.Int) metric{
 	var m metric
+	m.Val = num.String()
 	run:=rand.Intn(effort-0) + 0
 	m.Perf= run
 	isPrime := num.ProbablyPrime(run)

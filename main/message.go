@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 )
 
 type Message struct{
@@ -14,13 +13,6 @@ type Message struct{
 	Timestamp string
 	Type string
 	Result metric
-}
-
-type metric struct {
-	Perf int
-	IsPrime bool
-	hPerf time.Duration
-	Hash string
 }
 
 func encode(sender string,receiver string,kind string, value string,typ string, m metric) string{

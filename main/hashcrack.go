@@ -92,7 +92,7 @@ func setDict(){
 
 func generateHash ()string{
 	hash:= md5.New()
-	hash.Write([]byte(generateCandidate()))
+	hash.Write([]byte(generateCandidate().String()))
 
 	return hex.EncodeToString(hash.Sum(nil))
 }

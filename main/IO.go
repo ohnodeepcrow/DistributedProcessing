@@ -6,10 +6,11 @@ import (
 	"bufio"
 	"strings"
 	"fmt"
-
 )
 
+
 func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
+
 	reader :=bufio.NewReader(os.Stdin)
 	for {	fmt.Print("\n")
 		fmt.Print("(s)end/(r)eceive/(g)enerate\n")
@@ -49,3 +50,4 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 		}
 	}
 }
+

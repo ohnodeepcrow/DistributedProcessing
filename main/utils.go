@@ -27,13 +27,13 @@ func getNodeInfo(self string, config Configs) NodeInfo{
 func metricString (m metric) string{
 	a:=strconv.FormatBool(m.IsPrime)
 	b:=strconv.Itoa(m.Perf)
-	c:="Prime:"+a+"\n"+"Effort:"+b
+	c:="Prime: "+a+"\n"+"Effort: "+b
 	return c
 }
 
 func hmetricString (m metric) string{
 	a:=m.Val
 	b:=m.hPerf.String()
-	c:="Preimage:"+a+"\n"+"Performance Hit:"+b
+	c:="Preimage: "+a+"\n"+"Performance Hit: "+b
 	return c
 }

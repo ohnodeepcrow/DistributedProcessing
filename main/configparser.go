@@ -4,6 +4,7 @@ import (
 	"os"
 	"io/ioutil"
 	"strings"
+	"fmt"
 )
 
 type Configs struct{
@@ -12,10 +13,13 @@ type Configs struct{
 
 type NodeInfo struct {
 	NodeName	string
+	NodeType	string
 	NodeGroup	string
 	NodeAddr	string
 	SendPort	string
 	RecvPort	string
+	LeaderSendPort	string
+	LeaderRecvPort	string
 	Effort 		string
 }
 
@@ -59,6 +63,7 @@ func ParseConfigString(raw string) Configs{
 }
 
 func ParseNode(nodelines []string) NodeInfo{
+
 	var retnode NodeInfo
 	var err error
 	for _,lin := range nodelines {
@@ -75,9 +80,33 @@ func ParseNode(nodelines []string) NodeInfo{
 			retnode.RecvPort =  strings.Split(lin,"=")[1]
 			check(err)
 		} else if strings.Contains(lin,"Effort"){
+
 			retnode.Effort =  strings.Split(lin,"=")[1]
 			check(err)
+		}else if strings.Contains(lin,"NodeType"){
+			retnode.NodeType =  strings.Split(lin,"=")[1]
+			check(err)
+		}else if strings.Contains(lin,"LeaderRecvPort"){
+			retnode.LeaderRecvPort =  strings.Split(lin,"=")[1]
+			check(err)
+		}else if strings.Contains(lin,"LeaderSendPort"){
+
+			retnode.LeaderSendPort =  strings.Split(lin,"=")[1]
+			fmt.Print(retnode.LeaderSendPort)
+			check(err)
+		}else if strings.Contains(lin,"lsp"){
+			retnode.LeaderSendPort =  strings.Split(lin,"=")[1]
+
+			check(err)
+		}else if strings.Contains(lin,"lcp"){
+			retnode.LeaderRecvPort =  strings.Split(lin,"=")[1]
+
+			check(err)
 		}
-	}
+
+
+
+
+}
 	return retnode
 }

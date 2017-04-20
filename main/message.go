@@ -12,10 +12,12 @@ type Message struct{
 	Value string
 	Timestamp string
 	Type string
+	SenderGroup string
+	ReceiverGroup string
 }
 
-func encode(sender string,receiver string,kind string, value string,typ string) string{
-	msg := &Message{Sender: sender, Receiver: receiver, Kind: kind, Value: value, Timestamp: getCurrentTimestamp(), Type:typ}
+func encode(sender string,receiver string,kind string, value string,typ string,sgp string,rgp string) string{
+	msg := &Message{Sender: sender, Receiver: receiver, Kind: kind, Value: value, Timestamp: getCurrentTimestamp(), Type:typ,SenderGroup: sgp,ReceiverGroup:rgp}
 	b, err := json.Marshal(msg)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
@@ -33,7 +35,7 @@ func decode(in string) Message{
 	return m
 }
 
-func IsMyMessage(self NodeInfo, message Message){
+func IsMyMessage(self NodeInfo, message Message) bool{
 	if (message.Receiver == self.NodeName){
 		return true
 	}

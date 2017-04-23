@@ -24,6 +24,63 @@ type Reputation struct {
 	Correct 	int
 }
 
+
+//Map that maps node names to the first time that node was seen
+type Uptimes struct{
+	Uptimes map[string]Uptime
+}
+
+type Uptime struct{
+	time time.Time
+}
+
+func newUptimes(name string)Uptimes{
+	var ret Uptimes
+	ret.Uptimes = make(map[string]Uptime)
+	var tmp Uptime
+	tmp.time = time.Now()
+	ret.Uptimes[name] = tmp
+	return ret
+}
+
+func newRepMetrics(name string)RepMetrics{
+	var ret RepMetrics
+	ret.CurrentMetrics = make(map[string]Reputation)
+	var tmp Reputation
+	tmp.Correct = 0
+	tmp.Count = 0
+	tmp.Score = 0
+	ret.CurrentMetrics[name] = tmp
+	return ret
+}
+
+//If a node doesn't currently have an uptime, add one
+func updateUptime(ut Uptimes, name string, newtime Uptime) bool{
+	_, ok := ut.Uptimes[name]
+	if !ok{
+		ut.Uptimes[name] = newtime
+		return true
+	}
+	return false
+}
+
+//Remove the uptime associated with a node
+func clearUptime(ut Uptimes, name string){
+	delete(ut.Uptimes, name)
+}
+
+func getLongestUptime(ut Uptimes) (string,Uptime){
+	longest := time.Now()
+	lname := ""
+	for k,v := range ut.Uptimes{
+		if longest.After(v.time){
+			longest = v.time
+			lname = k
+		}
+	}
+	return lname, ut.Uptimes[lname]
+}
+
 //Scorer should take in the current reputation and the new result and update the reputation as a result
 func updateReputation(repmets RepMetrics, newmet metric, node string, scorer func(nm metric, rp Reputation)) bool{
 	rep, ok := repmets.CurrentMetrics[node]

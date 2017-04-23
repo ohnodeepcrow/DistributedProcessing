@@ -27,7 +27,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 			a[1] = strings.Trim(strings.Split(text1, " ")[1], "\n")
 
 			var dummy metric
-			msg := encode(nodeinfo.NodeName, text, a[0],a[1],"Request",dummy)
+			msg := encode(nodeinfo.NodeName, text, a[0],a[1],"Request",dummy,a[1])
 
 			nodeSend(string(msg), self) // if leader--> group, if member-->leader
 

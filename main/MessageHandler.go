@@ -11,18 +11,19 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
 		if m.Kind == "Prime" && m.Type== "Request"{
 			i,_:= strconv.ParseInt(m.Value,10,64)
+			println(m.Value)
 			num:=big.NewInt(i)
 			metric := testPrime(*num)
 			ms:=metricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric)
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric,num.String())
 			//fmt.Print(string(msg) + "\n")
 			nodeSend(msg,self)
 		} else if m.Kind == "Hash" && m.Type== "Request"{
 			metric := crackHash(m.Value)
 			ms:=hmetricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric)
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric,m.Value)
 			//fmt.Print(string(msg) + "\n")
 			nodeSend(msg,self)
 		} else if m.Type== "Reply" {

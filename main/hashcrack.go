@@ -54,7 +54,7 @@ func crackHash(hashToCrack string) (metric) {
 	for scanner.Scan() {
 		fileTextLine = scanner.Text()
 		fileHash := getMD5HashForString(fileTextLine)
-
+		//println(fileHash)
 		if fileHash == hashToCrack {
 			foundHash = true
 			break

@@ -5,8 +5,9 @@ import (
 	"log"
 	"github.com/gotk3/gotk3/gtk"
 	"strconv"
-	"time"
 	"github.com/gotk3/gotk3/glib"
+	"bufio"
+	"os"
 )
 
 func setup_window(title string) *gtk.Window {
@@ -82,37 +83,6 @@ func set_text_in_tview(tv *gtk.TextView, text string) {
 	buffer.SetText(text)
 }
 
-// The code before this line is unchanged from the textview example.
-// Kept here because we need content to fill our stack.
-
-
-
-/*
-
-func newBoxRadio(btns ...string) gtk.IWidget {
-	var (
-		// Reference to previous button, so we can add the new one in the same group.
-		prev *gtk.RadioButton
-		box  = setup_box(gtk.ORIENTATION_VERTICAL)
-	)
-
-	for i, txt := range btns {
-		radio, err := gtk.RadioButtonNewWithLabelFromWidget(prev, txt)
-		if err != nil {
-			log.Fatal("Unable to get text:", err)
-		}
-		box.PackStart(radio, false, false, 0)
-		prev = radio
-
-		// We're in a loop, so we need to make a static copy of the index for the callback.
-		i := i
-
-		radio.Connect("toggled", func() { fmt.Println(i, radio.GetActive()) })
-	}
-
-	return box
-}
-*/
 func newStackFull() gtk.IWidget {
 	// get a stack and its switcher.
 	stack, err := gtk.StackNew()
@@ -154,13 +124,23 @@ func preImage(c1 string) gtk.IWidget {
 
 	box.PackStart(sw, true, true, 10)
 	result, hor:=setup_tview()
+	inFile, ioErr := os.Open("tdict.txt")
 
+	if ioErr != nil{
+		fmt.Println(ioErr)
+	}
 
-	// Add some rows to the list store
-	addRow1(listStore, "r57")
-	addRow1(listStore, "r60")
-	addRow1(listStore, "r60")
-	addRow1(listStore, "r60")
+	defer inFile.Close()
+	scanner := bufio.NewScanner(inFile)
+	scanner.Split(bufio.ScanLines)
+
+	var fileTextLine string
+
+	for scanner.Scan() {
+		fileTextLine = scanner.Text()
+		addRow1(listStore,fileTextLine)
+
+	}
 
 	btn := setup_btn("Submit Pre-Image Test to Network", func() {
 		selection, err := treeView.GetSelection()
@@ -186,7 +166,7 @@ func preImage(c1 string) gtk.IWidget {
 					log.Fatal("IdleAdd() failed:", err)
 				}
 				var dummy metric
-				msg := encode(nodeinf.NodeName, "leader", "Hash",hash,"Request",dummy)
+				msg := encode(nodeinf.NodeName, "leader", "Hash",hash,"Request",dummy,hash)
 				nodeSend(string(msg), nodesoc)
 
 		}()
@@ -197,7 +177,7 @@ func preImage(c1 string) gtk.IWidget {
 
 		go func() {
 			str=get_text_from_tview(result)
-			time.Sleep(time.Second*2)
+			//time.Sleep(time.Second*2)
 			_, err := glib.IdleAdd(LabelSetTextIdle, "")
 			if err != nil {
 				log.Fatal("IdleAdd() failed:", err)
@@ -209,8 +189,8 @@ func preImage(c1 string) gtk.IWidget {
 			for n :=  ml.Front(); n != nil ; n = n.Next(){
 				test := n.Value.(Message)
 
-				//fmt.Println("====Results====")
-				str+="Test: Pre-Image"
+				str+="Input: "
+				str+=test.Input
 				str+="\n"
 				str+=test.Value
 				str+="\n"
@@ -226,8 +206,16 @@ func preImage(c1 string) gtk.IWidget {
 		//fmt.Println(text)
 	})
 
+	btn2 := setup_btn("Clear Results", func() {
+
+		set_text_in_tview(result,"")
+
+		//fmt.Println(text)
+	})
+
 	box.Add(btn)
 	box.Add(btn1)
+	box.Add(btn2)
 	box.PackEnd(hor,true,true,10)
 
 	return box
@@ -238,6 +226,7 @@ func preImage(c1 string) gtk.IWidget {
 func isPrime(c1 string, c2 string) gtk.IWidget {
 	box := setup_box(gtk.ORIENTATION_VERTICAL)
 	treeView, listStore := setupTreeView2(c1,c2)
+	treeView.SetBorderWidth(23)
 	sw, _ := gtk.ScrolledWindowNew(nil, nil)
 	sw.Add(treeView)
 
@@ -263,7 +252,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 
 		_, iter, _ := selection.GetSelected()
 
-		x, err := listStore.GetValue(iter, 0)
+		x, err := listStore.GetValue(iter, 1)
 		if err != nil {
 			log.Printf("treeSelectionChangedCB: Could not get path from model: %s\n", err)
 			return
@@ -278,7 +267,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 				log.Fatal("IdleAdd() failed:", err)
 			}
 			var dummy metric
-			msg := encode(nodeinf.NodeName, "leader", "Prime",isPrime,"Request",dummy)
+			msg := encode(nodeinf.NodeName, "leader", "Prime",isPrime,"Request",dummy,isPrime)
 			nodeSend(string(msg), nodesoc)
 
 		}()
@@ -289,7 +278,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 
 		go func() {
 			str=get_text_from_tview(result)
-			time.Sleep(time.Second*2)
+			//time.Sleep(time.Second*2)
 			_, err := glib.IdleAdd(LabelSetTextIdle, "")
 			if err != nil {
 				log.Fatal("IdleAdd() failed:", err)
@@ -302,7 +291,9 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 				test := n.Value.(Message)
 
 				//fmt.Println("====Results====")
-				str+="Test: Primality "
+
+				str+="Input: "
+				str+=test.Input
 				str+="\n"
 				str+=test.Value
 				str+="\n"
@@ -318,8 +309,16 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 		//fmt.Println(text)
 	})
 
+	btn2 := setup_btn("Clear Results", func() {
+
+			set_text_in_tview(result,"")
+
+		//fmt.Println(text)
+	})
+
 	box.Add(btn)
 	box.Add(btn1)
+	box.Add(btn2)
 	box.PackEnd(hor,true,true,10)
 
 	return box
@@ -337,6 +336,7 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 	sw1, _ := gtk.ScrolledWindowNew(nil, nil)
 	sw1.Add(treeView1)
 	box.PackStart(sw1, true, true, 10)
+
 
 	// Add some rows to the list store
 	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
@@ -362,7 +362,13 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
 	})
+	btn1 := setup_btn("Train Network with test data", func() {
+
+		//text := get_text_from_tview(treeView)
+		//fmt.Println(text)
+	})
 	box.Add(btn)
+	box.Add(btn1)
 	return box
 }
 var nodesoc NodeSocket
@@ -383,6 +389,7 @@ func startUI(self NodeSocket, nodeinfo NodeInfo) {
 
 	box := newStackFull()
 	win.Add(box)
+	win.SetBorderWidth(20)
 
 	// Recursively show all widgets contained in this window.
 	win.ShowAll()

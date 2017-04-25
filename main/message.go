@@ -12,12 +12,18 @@ type Message struct{
 	Value string
 	Timestamp string
 	Type string
+
+	SenderGroup string
+	ReceiverGroup string
+	Flag bool
+	Address string
+	Port string
 	Result metric
 	Input string
 }
 
-func encode(sender string,receiver string,kind string, value string,typ string, m metric, i string) string{
-	msg := &Message{Sender: sender, Receiver: receiver, Kind: kind, Value: value, Timestamp: getCurrentTimestamp(), Type:typ, Result:m, Input:i}
+func encode(sender string,receiver string,kind string, value string,typ string,sgp string,rgp string, flag bool, addr string, port string,m metric, i string) string{
+	msg := &Message{Sender: sender, Receiver: receiver, Kind: kind, Value: value, Timestamp: getCurrentTimestamp(), Type:typ,SenderGroup: sgp,ReceiverGroup:rgp, Flag:flag,Address:addr,Port:port, Result:m, Input:i}
 	b, err := json.Marshal(msg)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
@@ -33,4 +39,11 @@ func decode(in string) Message{
 	var m Message
 	json.Unmarshal(res,&m)
 	return m
+}
+
+func IsMyMessage(self NodeInfo, message Message) bool{
+	if (message.Receiver == self.NodeName){
+		return true
+	}
+	return false
 }

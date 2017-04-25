@@ -22,8 +22,12 @@ func main(){
 	configfile := os.Args[1]
 	selfstr := os.Args[2]
 	var configs Configs = ReadConfig(configfile)
+
 	self := getNodeInfo(selfstr, configs)
-	leader := getNodeInfo("leader", configs)
+	// currently we are assigning leader with their peer manually, need to figure out a better way to connect the peers.
+	leader1 := getNodeInfo("leader1", configs)
+	leader2 := getNodeInfo("leader2", configs)
+	master := getNodeInfo("master", configs)
 	fmt.Println("Running as "+self.NodeName)
 	fmt.Println("IP: " + self.NodeAddr)
 	fmt.Println("Port1: " + self.SendPort)
@@ -33,12 +37,22 @@ func main(){
 	cntxt,_ := zmq4.NewContext()
 	eff, _ := strconv.Atoi(self.Effort)
 	setEffort(eff)
+
 	setDict()
+
 	var ns NodeSocket
-	if self.NodeName == "leader"{
-		ns = establishLeader(cntxt, self)
-	} else {
-		ns = establishMember(cntxt, self, leader)
+	if self.NodeType == "leader"{
+		var ma NodeInfo
+		ma = master
+		ns = establishLeader(cntxt,self,ma)
+	} else if self.NodeType == "master"{
+		ns = establishMaster(cntxt, self)
+	}else{
+		if (self.NodeGroup == "group1") {
+			ns = establishMember(cntxt, self, leader1)
+		}else if (self.NodeGroup == "group2"){
+			ns = establishMember(cntxt, self, leader2)
+		}
 	}
 	go startIO(cntxt, ns, self)
 	go startReceiver(ns)

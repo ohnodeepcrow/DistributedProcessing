@@ -11,14 +11,14 @@ type NodeSocket struct {
 	appq	 mutexQueue
 	recvq    mutexQueue
 	dataq 	 mutexQueue // only store the computation result
-	sendsock *zmq4.Socket
-	recvsock *zmq4.Socket
-	leadersendsock *zmq4.Socket
-	leaderrecvsock *zmq4.Socket
-	datasendsock *zmq4.Socket
-	datarecvsock *zmq4.Socket
-	leader   bool
-	master bool
+	sendsock *zmq4.Socket //leaf multicast send
+	recvsock *zmq4.Socket //leaf multicast receive
+	leadersendsock *zmq4.Socket //leader multicast send
+	leaderrecvsock *zmq4.Socket //leader multicast receive
+	datasendsock *zmq4.Socket //p2p data send
+	datarecvsock *zmq4.Socket //p2p receive
+	leader   bool //Am I a group leader?
+	master bool //Am I the root node?
 }
 
 func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{

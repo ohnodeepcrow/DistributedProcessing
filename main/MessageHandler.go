@@ -25,7 +25,7 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			metric := crackHash(m.Value)
 			ms:=hmetricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,m.Value())
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 			//fmt.Print(string(msg) + "\n")
 
@@ -55,7 +55,7 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 func MasterNodeRec(self NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg := decode(m)
-	message := encode(msg.Sender,msg.Receiver,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port)
+	message := encode(msg.Sender,msg.Receiver,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port,msg.Result,msg.Input)
 	go nodeSend(message,self)
 
 }
@@ -117,7 +117,7 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 	num:=big.NewInt(i)
 	metric := testPrime(*num)
 	ms:=metricString(metric)
-	msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort)
+	msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort, metric, m.Value)
 	fmt.Print(string(msg) + "\n")
 	for {
 		signal,_ := send_sock.Recv(zmq4.DONTWAIT)

@@ -100,7 +100,7 @@ func ReceiveResult(self NodeSocket,msg Message){
 			//send the result back through data socket.
 			fmt.Print("Received from data soc: "+tmp + "\n")
 			MQpush(self.dataq, tmp)
-
+			return
 		}
 		time.Sleep(time.Millisecond*50)
 	}
@@ -126,7 +126,7 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 			//send the result back through data socket.
 			fmt.Print(signal+"\n")
 			send_sock.Send(msg,0)
-
+			return
 		}
 		time.Sleep(time.Millisecond*50)
 	}

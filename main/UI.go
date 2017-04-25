@@ -166,7 +166,7 @@ func preImage(c1 string) gtk.IWidget {
 					log.Fatal("IdleAdd() failed:", err)
 				}
 				var dummy metric
-				msg := encode(nodeinf.NodeName, "leader", "Hash",hash,"Request",dummy,hash)
+				msg := encode(nodeinf.NodeName, "leader", "Hash",hash,"Request","","",false,"","",dummy,hash)
 				nodeSend(string(msg), nodesoc)
 
 		}()
@@ -267,7 +267,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 				log.Fatal("IdleAdd() failed:", err)
 			}
 			var dummy metric
-			msg := encode(nodeinf.NodeName, "leader", "Prime",isPrime,"Request",dummy,isPrime)
+			msg := encode(nodeinf.NodeName, "", "Prime",isPrime,"Request","","",false,"","",dummy,isPrime)
 			nodeSend(string(msg), nodesoc)
 
 		}()
@@ -385,7 +385,7 @@ func startUI(self NodeSocket, nodeinfo NodeInfo) {
 
 	gtk.Init(nil)
 
-	win := setup_window(winTitle)
+	win := setup_window(nodeinf.NodeName)
 
 	box := newStackFull()
 	win.Add(box)

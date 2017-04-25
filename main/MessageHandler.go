@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"fmt"
 	"time"
+	"github.com/pebbe/zmq4"
 )
 
 
@@ -16,15 +17,18 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			metric := testPrime(*num)
 			ms:=metricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric,num.String())
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,num.String())
+
 			//fmt.Print(string(msg) + "\n")
 			nodeSend(msg,self)
 		} else if m.Kind == "Hash" && m.Type== "Request"{
 			metric := crackHash(m.Value)
 			ms:=hmetricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",metric,m.Value)
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,m.Value())
+
 			//fmt.Print(string(msg) + "\n")
+
 			nodeSend(msg,self)
 		} else if m.Type== "Reply" {
 			MQpush(self.appq, m)
@@ -33,8 +37,27 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 
 
 /*Lead node will call this function after it received a message from a node. It will use send to retransmit the node. */
-func LeadNodeRec(self NodeSocket, m string){
-	nodeSend(m,self)
+func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
+	fmt.Print(m+"\n")
+	msg:=decode(m)
+
+	if (msg.ReceiverGroup != node.NodeGroup){
+		if (msg.Flag == false) {
+			go LeadNodeSend(m, self) // lead node send this message to other lead node.
+		}
+	} else if (msg.ReceiverGroup == node.NodeGroup){
+		go nodeSend(m, self)
+	}
+
+}
+
+/*Master node will call this function after it received a message from a node. It will use send to retransmit the node. */
+func MasterNodeRec(self NodeSocket, m string){
+	fmt.Print(m+"\n")
+	msg := decode(m)
+	message := encode(msg.Sender,msg.Receiver,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port)
+	go nodeSend(message,self)
+
 }
 
 func MessageHandler(node NodeInfo, self NodeSocket){
@@ -47,10 +70,13 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 	m:= decode(message)
 	if m.Receiver == node.NodeName {
 		processRequest(node, self, message)
+		go SendResult(self,node,m)
 	} else if self.leader == true {
 			//println("Retransmitting " + message)
-			LeadNodeRec(self, message)
-	} else {
+			LeadNodeRec(node, self, message)
+	} else if self.master == true {
+		MasterNodeRec(self,message)
+	}else {
 		return //drop message
 	}
 }
@@ -59,5 +85,48 @@ func startMessageHandler(node NodeInfo, self NodeSocket){
 	for{
 		time.Sleep(time.Millisecond*50)
 		MessageHandler(node,self)
+	}
+}
+
+func ReceiveResult(self NodeSocket,msg Message){
+	addr:=msg.Address
+	port:=msg.Port
+	soc :=establishClient(addr,port,self)
+	soc.Send("req",0)
+	for {
+		tmp,_ := soc.Recv(zmq4.DONTWAIT)
+		if (tmp != ""){
+			//send the result back through data socket.
+			fmt.Print("Received from data soc: "+tmp + "\n")
+			MQpush(self.dataq, tmp)
+
+		}
+		time.Sleep(time.Millisecond*50)
+	}
+
+
+
+}
+func SendResult(self NodeSocket, node NodeInfo, m Message){
+	addr:=node.NodeAddr
+	port:=node.DataSendPort
+	send_sock:= establishServer(addr,port,self)
+	t,_ :=(send_sock.GetIdentity())
+	fmt.Print(t +"\n")
+	i,_:= strconv.ParseInt(m.Value,10,64)
+	num:=big.NewInt(i)
+	metric := testPrime(*num)
+	ms:=metricString(metric)
+	msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort)
+	fmt.Print(string(msg) + "\n")
+	for {
+		signal,_ := send_sock.Recv(zmq4.DONTWAIT)
+		if (signal != ""){
+			//send the result back through data socket.
+			fmt.Print(signal+"\n")
+			send_sock.Send(msg,0)
+
+		}
+		time.Sleep(time.Millisecond*50)
 	}
 }

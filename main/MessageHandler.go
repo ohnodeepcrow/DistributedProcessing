@@ -8,33 +8,37 @@ import (
 )
 
 
-func processRequest(node NodeInfo, self NodeSocket, input string) {
+func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
-		if m.Kind == "Prime" && m.Type== "Request"{
+		 if m.Type=="Selected"{
+			ReceiveResult(self,m)
+		}
+}
+
+
+func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
+	m:= decode(input)
+	if m.Type=="Selected"{
+		if m.Kind == "Prime" {
 			i,_:= strconv.ParseInt(m.Value,10,64)
 			println(m.Value)
 			num:=big.NewInt(i)
 			metric := testPrime(*num)
 			ms:=metricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,num.String())
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
-			//fmt.Print(string(msg) + "\n")
-			nodeSend(msg,self)
-		} else if m.Kind == "Hash" && m.Type== "Request"{
+		} else if m.Kind == "Hash" {
 			metric := crackHash(m.Value)
 			ms:=hmetricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,m.Value)
+			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
-			//fmt.Print(string(msg) + "\n")
-
-			nodeSend(msg,self)
 		}
-			else if m.Type== "Reply" {
-			MQpush(self.appq, m)
-		}
+		SendResult(self,node,m)
+	}
 }
+
 
 
 /*Lead node will call this function after it received a message from a node. It will use send to retransmit the node. */
@@ -42,18 +46,16 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg:=decode(m)
 
-	if (msg.ReceiverGroup != node.NodeGroup){
-		if (msg.Flag == false) {
-			LeadNodeSend(m, self) // lead node send this message to other lead node.
-		}
-		if(msg.Flag== true){
-			//set the msg.receiver node as busy and inform all nodes
-			nodeSend(m,self)
-		}
-	} else if (msg.ReceiverGroup == node.NodeGroup){
-		nodeSend(m, self)
-	}else if(msg.Kind=="Metric"){
+	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
+		LeadNodeSend(m, self) // lead node send this message to other lead node.
+	} else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
 		//reply to master node with the best node
+		//update busy list
+	} else if msg.Type=="Selected" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
+		//update busy list
+		nodeSend(m,self)
+	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
+		//update metrics
 	}
 
 }
@@ -63,12 +65,17 @@ func MasterNodeRec(self NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg := decode(m)
 	var dummy metric
-	message := encode(msg.Sender,msg.Receiver,"Metric",msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,false,msg.Address,msg.Port,dummy,msg.Value)
-	nodeSend(message,self)
-	bestnode :=selectNode()
-	//put the best node in msg.Receiver
-	message := encode(msg.Sender,bestnode,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port,dummy,msg.Value)
-	nodeSend(message,self)
+	if msg.Type=="Request" {
+		message := encode(msg.Sender, msg.Receiver, "Metric", msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
+		nodeSend(message, self)
+		bestnode := selectNode()
+
+		//put the best node in msg.Receiver
+		m := encode(msg.Sender, bestnode, msg.Kind, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
+		nodeSend(m, self)
+	}else if msg.Type=="Metric" {
+		//update metric list
+	}
 
 }
 
@@ -81,8 +88,10 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 	message := fmt.Sprint(s)
 	m:= decode(message)
 	if m.Receiver == node.NodeName {
-		processRequest(node, self, message)
-		SendResult(self,node,m)
+		processRequestReceive(node, self, message)
+	}else if  m.Sender == node.NodeName {
+		processRequestSend(node, self, message)
+
 	} else if self.leader == true {
 			//println("Retransmitting " + message)
 			LeadNodeRec(node, self, message)
@@ -129,7 +138,7 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 	num:=big.NewInt(i)
 	metric := testPrime(*num)
 	ms:=metricString(metric)
-	msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,false,node.NodeAddr,node.DataSendPort,metric,m.Value)
+	msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 	fmt.Print(string(msg) + "\n")
 	for {
 		signal,_ := send_sock.Recv(zmq4.DONTWAIT)

@@ -90,22 +90,37 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 }
 
 /*Master node will call this function after it received a message from a node. It will use send to retransmit the node. */
-func MasterNodeRec(self NodeSocket, m string){
+func MasterNodeRec(node NodeInfo,self NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg := decode(m)
 	var dummy metric
 	if msg.Type=="Request" {
-		message := encode(msg.Sender, msg.Receiver, "Metric",msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
+		message := encode(msg.Sender, msg.Receiver, "Metric", msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(message, self)
-		bestnode := selectNode()
+		bestnode := MasterNodeMet(node, self)
 
 		//put the best node in msg.Receiver
-		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job,msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
+		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(m, self)
-	}else if msg.Type=="Metric" {
-		//update metric list
 	}
 }
+
+func MasterNodeMet(node NodeInfo,self NodeSocket) string {
+	for {
+		s := MQpop(self.recvq)
+		if s != nil {
+			message := fmt.Sprint(s)
+			m := decode(message)
+			if m.Type == "Metric" {
+				//check if we received all metrics from GLs and set bestnode accordingly
+			} else if m.Type == "Request" {
+				MQpush(self.recvq, s)
+			}
+		}
+	}
+	return ""
+}
+
 
 func MessageHandler(node NodeInfo, self NodeSocket){
 
@@ -124,8 +139,8 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 			//println("Retransmitting " + message)
 			LeadNodeRec(node, self, message)
 	} else if self.master == true {
-		MasterNodeRec(self,message)
-	}else {
+		MasterNodeRec(node,self,message)
+	}else{
 		return //drop message
 	}
 }
@@ -179,9 +194,12 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 		time.Sleep(time.Millisecond*50)
 	}
 }
+<<<<<<< HEAD
 
 
 func selectNode(job string){
 
 
 }
+=======
+>>>>>>> c0149d461d5cd00e8182d13a93d0f8778e362d68

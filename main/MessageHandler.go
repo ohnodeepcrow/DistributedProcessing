@@ -18,6 +18,7 @@ func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 
 func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
+	var msg string
 	if m.Type=="Selected"{
 		if m.Kind == "Prime" {
 			i,_:= strconv.ParseInt(m.Value,10,64)
@@ -26,16 +27,16 @@ func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 			metric := testPrime(*num)
 			ms:=metricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
+			msg = encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
 		} else if m.Kind == "Hash" {
 			metric := crackHash(m.Value)
 			ms:=hmetricString(metric)
 
-			msg := encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,,node.NodeAddr,node.DataSendPort,metric,m.Value)
+			msg = encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 		}
-		SendResult(self,node,m)
+		SendResult(self,node,decode(msg))
 	}
 }
 
@@ -76,7 +77,6 @@ func MasterNodeRec(self NodeSocket, m string){
 	}else if msg.Type=="Metric" {
 		//update metric list
 	}
-2
 }
 
 func MessageHandler(node NodeInfo, self NodeSocket){

@@ -50,10 +50,13 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, self) // lead node send this message to other lead node.
 	} else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
+		
 		//reply to master node with the best node
 		//update busy list
 	} else if msg.Type=="Selected" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		//update busy list
+
+
 		nodeSend(m,self)
 	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		//update metrics
@@ -154,4 +157,5 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 
 func selectNode() string{
 	//master finds the best node
+	return ""
 }

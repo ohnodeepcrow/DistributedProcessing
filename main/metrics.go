@@ -16,7 +16,7 @@ type metric struct {
 //Maps node name/ID to Reputation and busy status
 type RepMetrics struct {
 	CurrentMetrics map[string]Reputation
-	Busy map[string]bool
+	Busy map[string]string
 }
 
 type Reputation struct {
@@ -51,7 +51,7 @@ func newUptimes(name string)Uptimes{
 func newRepMetrics(name string)RepMetrics{
 	var ret RepMetrics
 	ret.CurrentMetrics = make(map[string]Reputation)
-	ret.Busy = make(map[string]bool)
+	ret.Busy = make(map[string]string)
 	var tmp Reputation
 	tmp.Correct = 0
 	tmp.Count = 0
@@ -75,7 +75,7 @@ func getBestFreeScore(metrics RepMetrics) (string, int){
 	bestscore := 0
 	bestname := ""
 	for k,v := range metrics.CurrentMetrics{
-		if (v.Score > bestscore) && !(metrics.Busy[k]){
+		if (v.Score > bestscore) && (metrics.Busy[k] == ""){
 			bestname = k
 			bestscore = v.Score
 		}
@@ -83,12 +83,16 @@ func getBestFreeScore(metrics RepMetrics) (string, int){
 	return bestname, bestscore
 }
 
-func setBusy(metrics RepMetrics, nodename string){
-	metrics.Busy[nodename] = true
+func getBusyJob(metrics RepMetrics, nodename string) string{
+	return metrics.Busy[nodename]
+}
+
+func setBusy(metrics RepMetrics, nodename string, jid string){
+	metrics.Busy[nodename] = jid
 }
 
 func setFree(metrics RepMetrics, nodename string){
-	metrics.Busy[nodename] = false
+	metrics.Busy[nodename] = ""
 }
 
 //If a node doesn't currently have an uptime, add one

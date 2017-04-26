@@ -59,7 +59,7 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 		//update busy list
 		//master finds the best node
 		bestname, bestscore := getBestFreeScore(node.RepMets)
-		setBusy(node.RepMets, bestname)
+		setBusy(node.RepMets, bestname, msg.Job)
 		var m metric
 		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
 		LeadNodeSend(retmsg, self)
@@ -69,7 +69,7 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 		nparr := strings.Split(msg.Input, ";")
 		for _,kid := range kids{
 			for _,np := range nparr{
-				if kid == np{
+				if kid == np && getBusyJob(node.RepMets, np) == msg.Job{
 					setFree(node.RepMets, kid)
 				}
 			}

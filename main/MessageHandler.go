@@ -30,7 +30,8 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			//fmt.Print(string(msg) + "\n")
 
 			nodeSend(msg,self)
-		} else if m.Type== "Reply" {
+		}
+			else if m.Type== "Reply" {
 			MQpush(self.appq, m)
 		}
 }
@@ -43,10 +44,16 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 
 	if (msg.ReceiverGroup != node.NodeGroup){
 		if (msg.Flag == false) {
-			go LeadNodeSend(m, self) // lead node send this message to other lead node.
+			LeadNodeSend(m, self) // lead node send this message to other lead node.
+		}
+		if(msg.Flag== true){
+			//set the msg.receiver node as busy and inform all nodes
+			nodeSend(m,self)
 		}
 	} else if (msg.ReceiverGroup == node.NodeGroup){
-		go nodeSend(m, self)
+		nodeSend(m, self)
+	}else if(msg.Kind=="Metric"){
+		//reply to master node with the best node
 	}
 
 }
@@ -56,8 +63,12 @@ func MasterNodeRec(self NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg := decode(m)
 	var dummy metric
-	message := encode(msg.Sender,msg.Receiver,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port,dummy,msg.Value)
-	go nodeSend(message,self)
+	message := encode(msg.Sender,msg.Receiver,"Metric",msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,false,msg.Address,msg.Port,dummy,msg.Value)
+	nodeSend(message,self)
+	bestnode :=selectNode()
+	//put the best node in msg.Receiver
+	message := encode(msg.Sender,bestnode,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port,dummy,msg.Value)
+	nodeSend(message,self)
 
 }
 
@@ -71,7 +82,7 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 	m:= decode(message)
 	if m.Receiver == node.NodeName {
 		processRequest(node, self, message)
-		go SendResult(self,node,m)
+		SendResult(self,node,m)
 	} else if self.leader == true {
 			//println("Retransmitting " + message)
 			LeadNodeRec(node, self, message)
@@ -130,4 +141,8 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 		}
 		time.Sleep(time.Millisecond*50)
 	}
+}
+
+func selectNode() string{
+	//master finds the best node
 }

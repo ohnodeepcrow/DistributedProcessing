@@ -164,5 +164,4 @@ func nodeReceive(soc NodeSocket){
 
 func startReceiver(soc NodeSocket){
 	nodeReceive(soc)
-
 }

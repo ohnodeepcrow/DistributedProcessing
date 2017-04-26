@@ -182,7 +182,7 @@ func preImage(c1 string) gtk.IWidget {
 			if err != nil {
 				log.Fatal("IdleAdd() failed:", err)
 			}
-			ml := MQpopAll(nodesoc.appq)
+			ml := MQpopAll(nodesoc.dataq)
 			if ml.Front() == nil{
 				str+=""
 			}
@@ -283,7 +283,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 			if err != nil {
 				log.Fatal("IdleAdd() failed:", err)
 			}
-			ml := MQpopAll(nodesoc.appq)
+			ml := MQpopAll(nodesoc.dataq)
 			if ml.Front() == nil{
 				str+=""
 			}

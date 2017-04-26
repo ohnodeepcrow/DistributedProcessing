@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 	"github.com/pebbe/zmq4"
+	"strings"
 )
 
 
@@ -19,24 +20,28 @@ func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
 	var msg string
+	var ms string
+	var metric metric
 	if m.Type=="Selected"{
 		if m.Kind == "Prime" {
 			i,_:= strconv.ParseInt(m.Value,10,64)
 			println(m.Value)
 			num:=big.NewInt(i)
-			metric := testPrime(*num)
-			ms:=metricString(metric)
+			metric = testPrime(*num)
+			ms=metricString(metric)
 
 			msg = encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
 		} else if m.Kind == "Hash" {
-			metric := crackHash(m.Value)
-			ms:=hmetricString(metric)
+			metric = crackHash(m.Value)
+			ms=hmetricString(metric)
 
 			msg = encode(node.NodeName, m.Sender,m.Kind,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 		}
 		SendResult(self,node,decode(msg))
+		updatemsg := encode(node.NodeName, "",m.Kind, ms, "Update",node.NodeGroup,"","","",metric,"")
+		nodeSend(updatemsg, self)
 	}
 }
 
@@ -53,13 +58,33 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 		
 		//reply to master node with the best node
 		//update busy list
+		//master finds the best node
+		bestname, bestscore := getBestFreeScore(node.RepMets)
+		setBusy(node.RepMets, bestname)
+		var m metric
+		retmsg := encode(node.NodeName, bestname, msg.Kind, strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
+		LeadNodeSend(retmsg, self)
 	} else if msg.Type=="Selected" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		//update busy list
 
+		kids := getChildren(node.RepMets)
+		nparr := strings.Split(msg.Input, ";")
+		for _,kid := range kids{
+			for _,np := range nparr{
+				if kid == np{
+					setFree(node.RepMets, kid)
+				}
+			}
+		}
 
 		nodeSend(m,self)
 	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
-		//update metrics
+		setFree(node.RepMets,msg.Sender)
+		if msg.Kind == "Prime"{
+			updateReputation(node.RepMets, msg.Result, msg.Sender, primeScorer)
+		} else if msg.Kind == "Hash"{
+			updateReputation(node.RepMets, msg.Result, msg.Sender, hashScorer)
+		}
 	}
 
 }
@@ -155,7 +180,8 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 	}
 }
 
-func selectNode() string{
-	//master finds the best node
-	return ""
+
+func selectNode(job string){
+
+
 }

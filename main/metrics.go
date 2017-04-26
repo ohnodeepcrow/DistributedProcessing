@@ -55,6 +55,27 @@ func newRepMetrics(name string)RepMetrics{
 	return ret
 }
 
+
+func getBestFreeScore(metrics RepMetrics) (string, int){
+	bestscore := 0
+	bestname := ""
+	for k,v := range metrics.CurrentMetrics{
+		if (v.Score > bestscore) && !(metrics.Busy[k]){
+			bestname = k
+			bestscore = v.Score
+		}
+	}
+	return bestname, bestscore
+}
+
+func setBusy(metrics RepMetrics, nodename string){
+	metrics.Busy[nodename] = true
+}
+
+func setFree(metrics RepMetrics, nodename string){
+	metrics.Busy[nodename] = false
+}
+
 //If a node doesn't currently have an uptime, add one
 func updateUptime(ut Uptimes, name string, newtime Uptime) bool{
 	_, ok := ut.Uptimes[name]

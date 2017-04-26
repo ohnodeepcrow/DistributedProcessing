@@ -30,8 +30,7 @@ func processRequest(node NodeInfo, self NodeSocket, input string) {
 			//fmt.Print(string(msg) + "\n")
 
 			nodeSend(msg,self)
-		}
-			else if m.Type== "Reply" {
+		} else if m.Type== "Reply" {
 			MQpush(self.appq, m)
 		}
 }
@@ -67,7 +66,7 @@ func MasterNodeRec(self NodeSocket, m string){
 	nodeSend(message,self)
 	bestnode :=selectNode()
 	//put the best node in msg.Receiver
-	message := encode(msg.Sender,bestnode,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port,dummy,msg.Value)
+	message = encode(msg.Sender,bestnode,msg.Kind,msg.Value,msg.Type,msg.SenderGroup,msg.ReceiverGroup,true,msg.Address,msg.Port,dummy,msg.Value)
 	nodeSend(message,self)
 
 }

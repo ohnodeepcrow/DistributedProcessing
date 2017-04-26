@@ -76,7 +76,7 @@ func MasterNodeRec(self NodeSocket, m string){
 	}else if msg.Type=="Metric" {
 		//update metric list
 	}
-
+2
 }
 
 func MessageHandler(node NodeInfo, self NodeSocket){

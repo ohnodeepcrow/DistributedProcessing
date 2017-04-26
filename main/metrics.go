@@ -34,6 +34,11 @@ type Uptime struct{
 	time time.Time
 }
 
+func establishNode(self NodeInfo){
+	self.Uptimes = newUptimes(self.NodeName)
+	self.RepMets = newRepMetrics(self.NodeName)
+}
+
 func newUptimes(name string)Uptimes{
 	var ret Uptimes
 	ret.Uptimes = make(map[string]Uptime)
@@ -55,6 +60,16 @@ func newRepMetrics(name string)RepMetrics{
 	return ret
 }
 
+func getChildren(metrics RepMetrics) []string{
+	keys := make([]string, len(metrics.Busy))
+
+	i := 0
+	for k,_ := range metrics.Busy {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
 
 func getBestFreeScore(metrics RepMetrics) (string, int){
 	bestscore := 0

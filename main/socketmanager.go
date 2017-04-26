@@ -21,6 +21,11 @@ type NodeSocket struct {
 	master bool //Am I the root node?
 }
 
+func establishNode(self NodeInfo){
+	self.Uptimes = newUptimes(self.NodeName)
+	self.RepMets = newRepMetrics(self.NodeName)
+}
+
 func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{
 	ssoc, err := context.NewSocket(zmq4.PUB)
 	check(err)

@@ -13,9 +13,10 @@ type metric struct {
 	Val string
 }
 
-//Maps node name/ID to Reputation
+//Maps node name/ID to Reputation and busy status
 type RepMetrics struct {
 	CurrentMetrics map[string]Reputation
+	Busy map[string]bool
 }
 
 type Reputation struct {
@@ -23,7 +24,6 @@ type Reputation struct {
 	Count		int
 	Correct 	int
 }
-
 
 //Map that maps node names to the first time that node was seen
 type Uptimes struct{
@@ -46,6 +46,7 @@ func newUptimes(name string)Uptimes{
 func newRepMetrics(name string)RepMetrics{
 	var ret RepMetrics
 	ret.CurrentMetrics = make(map[string]Reputation)
+	ret.Busy = make(map[string]bool)
 	var tmp Reputation
 	tmp.Correct = 0
 	tmp.Count = 0

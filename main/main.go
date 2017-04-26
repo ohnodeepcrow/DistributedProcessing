@@ -41,6 +41,7 @@ func main(){
 	setDict()
 
 	var ns NodeSocket
+	establishNode(self)
 	if self.NodeType == "leader"{
 		var ma NodeInfo
 		ma = master

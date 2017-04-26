@@ -23,6 +23,8 @@ type NodeInfo struct {
 	Effort 		string
 	DataRecvPort 	string
 	DataSendPort	string
+	RepMets		RepMetrics
+	Uptimes		Uptimes
 }
 
 // Reads info from config file

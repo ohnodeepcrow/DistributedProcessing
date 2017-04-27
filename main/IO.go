@@ -30,7 +30,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 
 
 			var dummy metric
-			msg := encode(nodeinfo.NodeName, b[0], a[0],a[1],"Request",nodeinfo.NodeGroup,b[1],false,"","",dummy,a[1])
+			msg := encode(nodeinfo.NodeName, b[0], a[0],a[1],"Request",nodeinfo.NodeGroup,b[1],"","",dummy,a[1])
 
 
 

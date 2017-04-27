@@ -194,12 +194,4 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 		time.Sleep(time.Millisecond*50)
 	}
 }
-<<<<<<< HEAD
 
-
-func selectNode(job string){
-
-
-}
-=======
->>>>>>> c0149d461d5cd00e8182d13a93d0f8778e362d68

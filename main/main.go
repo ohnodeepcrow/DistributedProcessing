@@ -42,6 +42,18 @@ func main(){
 
 	var ns NodeSocket
 	establishNode(self)
+	/*TODO:
+
+		-If Leader: get group uptimes, group reputations, leader uptimes
+			-Group uptimes happen when nodes join network
+			-Group reputations happen when nodes join network
+			-Leader uptimes happen via bootstrap message
+		-If Root: get leader uptimes
+			-Happens via leader join bootstrap
+		-If Member: get group uptimes
+			-Happens via bootstrap message
+	*/
+	var myleader NodeInfo
 	if self.NodeType == "leader"{
 		var ma NodeInfo
 		ma = master
@@ -50,14 +62,15 @@ func main(){
 		ns = establishMaster(cntxt, self)
 	}else{
 		if (self.NodeGroup == "group1") {
-			ns = establishMember(cntxt, self, leader1)
+			myleader = leader1
 		}else if (self.NodeGroup == "group2"){
-			ns = establishMember(cntxt, self, leader2)
+			myleader = leader2
 		}
+		ns = establishMember(cntxt, self, myleader)
 	}
-	go startIO(cntxt, ns, self)
 	go startReceiver(ns)
 	go startMessageHandler(self, ns)
+	go startIO(cntxt, ns, self)
 	go startUI(ns, self)
 
 	wg.Wait()

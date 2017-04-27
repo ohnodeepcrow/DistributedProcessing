@@ -15,7 +15,8 @@ type metric struct {
 
 //Maps node name/ID to Reputation and busy status
 type RepMetrics struct {
-	CurrentMetrics map[string]Reputation
+	HashMetrics map[string]Reputation
+	PrimeMetrics map[string]Reputation
 	Busy map[string]string
 }
 
@@ -50,13 +51,15 @@ func newUptimes(name string)Uptimes{
 
 func newRepMetrics(name string)RepMetrics{
 	var ret RepMetrics
-	ret.CurrentMetrics = make(map[string]Reputation)
+	ret.PrimeMetrics = make(map[string]Reputation)
+	ret.HashMetrics = make(map[string]Reputation)
 	ret.Busy = make(map[string]string)
 	var tmp Reputation
 	tmp.Correct = 0
 	tmp.Count = 0
 	tmp.Score = 0
-	ret.CurrentMetrics[name] = tmp
+	ret.PrimeMetrics[name] = tmp
+	ret.PrimeMetrics[name] = tmp
 	return ret
 }
 
@@ -71,10 +74,15 @@ func getChildren(metrics RepMetrics) []string{
 	return keys
 }
 
-func getBestFreeScore(metrics RepMetrics) (string, int){
+func getBestFreeScore(metrics RepMetrics, probtype string) (string, int){
 	bestscore := 0
 	bestname := ""
-	for k,v := range metrics.CurrentMetrics{
+	var probmap map[string]Reputation
+	probmap = metrics.PrimeMetrics
+	if probtype == "Hash"{
+		probmap = metrics.HashMetrics
+	}
+	for k,v := range probmap{
 		if (v.Score > bestscore) && (metrics.Busy[k] == ""){
 			bestname = k
 			bestscore = v.Score
@@ -123,8 +131,8 @@ func getLongestUptime(ut Uptimes) (string,Uptime){
 }
 
 //Scorer should take in the current reputation and the new result and update the reputation as a result
-func updateReputation(repmets RepMetrics, newmet metric, node string, scorer func(nm metric, rp Reputation)) bool{
-	rep, ok := repmets.CurrentMetrics[node]
+func updateReputation(repmets map[string]Reputation, newmet metric, node string, scorer func(nm metric, rp Reputation)) bool{
+	rep, ok := repmets[node]
 	if !ok{
 		return false
 	}

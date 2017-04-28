@@ -41,7 +41,7 @@ func main(){
 	setDict()
 
 	var ns NodeSocket
-	establishNode(self)
+	self = establishNode(self)
 	/*TODO:
 
 		-If Leader: get group uptimes, group reputations, leader uptimes

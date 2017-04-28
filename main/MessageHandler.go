@@ -11,7 +11,7 @@ import (
 
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
-		 if m.Type=="Selected"{
+		 if m.Type=="Selected" && m.Sender!=m.Receiver{
 			ReceiveResult(self,m)
 		}
 }
@@ -29,17 +29,22 @@ func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 			num:=big.NewInt(i)
 			metric = testPrime(*num)
 			ms=metricString(metric)
-
+			nodeinf.RepMets=updateReputation(node.RepMets, metric, node.NodeName, primeScorer)
 			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
 		} else if m.Kind == "Hash" {
 			metric = crackHash(m.Value)
 			ms=hmetricString(metric)
-
+			nodeinf.RepMets=updateReputation(node.RepMets, metric, node.NodeName, hashScorer)
 			msg = encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 		}
-		SendResult(self,node,decode(msg))
+
+		if m.Sender!=m.Receiver{
+			SendResult(self,node,decode(msg))
+		}
+		fmt.Print(ms)
+		fmt.Print(node.RepMets.CurrentMetrics[node.NodeName])
 		updatemsg := encode(node.NodeName, "",m.Kind, ms, m.Job,"Update",node.NodeGroup,"","","",metric,"")
 		nodeSend(updatemsg, self)
 	}
@@ -91,13 +96,14 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 
 /*Master node will call this function after it received a message from a node. It will use send to retransmit the node. */
 func MasterNodeRec(node NodeInfo,self NodeSocket, m string){
+
 	fmt.Print(m+"\n")
 	msg := decode(m)
 	var dummy metric
 	if msg.Type=="Request" {
 		message := encode(msg.Sender, msg.Receiver, "Metric", msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(message, self)
-		bestnode := MasterNodeMet(node, self)
+		bestnode := MasterNodeMet(node, self,message)
 
 		//put the best node in msg.Receiver
 		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
@@ -105,13 +111,37 @@ func MasterNodeRec(node NodeInfo,self NodeSocket, m string){
 	}
 }
 
-func MasterNodeMet(node NodeInfo,self NodeSocket) string {
+func MasterNodeMet(node NodeInfo,self NodeSocket, msg string) string {
+	var counter map[string]bool
+	size := len(getChildren(node.RepMets))
+	c := 0
+	maxRep := -1
+	bestNode := ""
+	for _,child := range getChildren(node.RepMets){
+		counter[child] = false
+	}
 	for {
 		s := MQpop(self.recvq)
+
 		if s != nil {
 			message := fmt.Sprint(s)
 			m := decode(message)
+			req := decode(msg)
 			if m.Type == "Metric" {
+				if (m.Job == req.Job){
+					counter[m.Sender]=true
+					a,_ := strconv.Atoi(m.Value)
+					if (a > maxRep){
+						bestNode = m.Receiver
+						maxRep = a
+						c = c + 1
+						if (c==size){
+							return bestNode
+						}
+					}
+
+
+				}
 				//check if we received all metrics from GLs and set bestnode accordingly
 			} else if m.Type == "Request" {
 				MQpush(self.recvq, s)

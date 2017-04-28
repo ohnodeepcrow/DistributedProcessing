@@ -96,3 +96,12 @@ func generateHash ()string{
 
 	return hex.EncodeToString(hash.Sum(nil))
 }
+
+func trainHash(self NodeSocket,nodeinfo NodeInfo){
+	for i:=0;i<10 ;i++  {
+		var m metric
+		msg := encode(nodeinfo.NodeName, nodeinfo.NodeName,"Hash",generateHash(),getCurrentTimestamp(), "Selected",nodeinfo.NodeGroup,"","","",m,"")
+
+		processRequestReceive(nodeinfo, self ,msg )
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"time"
 	"strconv"
 	"math/big"
+	"fmt"
 )
 
 type metric struct {
@@ -35,9 +36,10 @@ type Uptime struct{
 	time time.Time
 }
 
-func establishNode(self NodeInfo){
+func establishNode(self NodeInfo) NodeInfo{
 	self.Uptimes = newUptimes(self.NodeName)
 	self.RepMets = newRepMetrics(self.NodeName)
+	return self
 }
 
 func newUptimes(name string)Uptimes{
@@ -59,7 +61,7 @@ func newRepMetrics(name string)RepMetrics{
 	tmp.Count = 0
 	tmp.Score = 0
 	ret.PrimeMetrics[name] = tmp
-	ret.PrimeMetrics[name] = tmp
+	ret.HashMetrics[name] = tmp
 	return ret
 }
 
@@ -131,28 +133,32 @@ func getLongestUptime(ut Uptimes) (string,Uptime){
 }
 
 //Scorer should take in the current reputation and the new result and update the reputation as a result
-func updateReputation(repmets map[string]Reputation, newmet metric, node string, scorer func(nm metric, rp Reputation)) bool{
+func updateReputation(repmets map[string]Reputation, newmet metric, node string, scorer func(nm metric, rp Reputation) Reputation) map[string]Reputation{
 	rep, ok := repmets[node]
 	if !ok{
-		return false
+		return nil
 	}
-	scorer(newmet, rep)
-	return true
+	rep = scorer(newmet, rep)
+	repmets[node] = rep
+	return repmets
 }
 
 //The score for hashing is the average time it takes to generate a collision
 //It doesn't use correctness currently
-func hashScorer(met metric, rep Reputation){
+func hashScorer(met metric, rep Reputation) Reputation{
+	fmt.Println(met.hPerf)
+	fmt.Println("debug")
 	rep.Count += 1
 	newscore := rep.Score / rep.Count
 	newscore += int(met.hPerf)
 	newscore = newscore/ rep.Count
 	rep.Score = newscore
+	return rep
 }
 
 //the score for primality is the average number of correct assessments out of 100,000
 //The score is score = correct/count
-func primeScorer(met metric, rep Reputation){
+func primeScorer(met metric, rep Reputation) Reputation{
 	i, _ := strconv.ParseInt(met.Val,10,64)
 	test := big.NewInt(i)
 	if met.IsPrime == testPrime(*test).IsPrime{
@@ -160,4 +166,5 @@ func primeScorer(met metric, rep Reputation){
 	}
 	rep.Count += 1
 	rep.Score = rep.Correct / rep.Count
+	return rep
 }

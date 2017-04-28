@@ -25,26 +25,28 @@ func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 	if m.Type=="Selected"{
 		if m.Kind == "Prime" {
 			i,_:= strconv.ParseInt(m.Value,10,64)
-			println(m.Value)
 			num:=big.NewInt(i)
 			metric = testPrime(*num)
 			ms=metricString(metric)
-			nodeinf.RepMets=updateReputation(node.RepMets, metric, node.NodeName, primeScorer)
+			nodeinf.RepMets.PrimeMetrics=updateReputation(node.RepMets.PrimeMetrics, metric, node.NodeName, primeScorer)
 			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
 		} else if m.Kind == "Hash" {
 			metric = crackHash(m.Value)
 			ms=hmetricString(metric)
-			nodeinf.RepMets=updateReputation(node.RepMets, metric, node.NodeName, hashScorer)
+			nodeinf.RepMets.HashMetrics=updateReputation(node.RepMets.HashMetrics, metric, node.NodeName, hashScorer)
 			msg = encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 		}
 
+		fmt.Println("Hash:")
+		fmt.Println(nodeinf.RepMets.HashMetrics[nodeinf.NodeName])
+		fmt.Println("Prime:")
+		fmt.Println(nodeinf.RepMets.PrimeMetrics[nodeinf.NodeName])
+
 		if m.Sender!=m.Receiver{
 			SendResult(self,node,decode(msg))
 		}
-		fmt.Print(ms)
-		fmt.Print(node.RepMets.CurrentMetrics[node.NodeName])
 		updatemsg := encode(node.NodeName, "",m.Kind, ms, m.Job,"Update",node.NodeGroup,"","","",metric,"")
 		nodeSend(updatemsg, self)
 	}

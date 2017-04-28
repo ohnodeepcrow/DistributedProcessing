@@ -58,7 +58,7 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 		//reply to master node with the best node
 		//update busy list
 		//master finds the best node
-		bestname, bestscore := getBestFreeScore(node.RepMets)
+		bestname, bestscore := getBestFreeScore(node.RepMets, msg.Kind)
 		setBusy(node.RepMets, bestname, msg.Job)
 		var m metric
 		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
@@ -78,9 +78,9 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		setFree(node.RepMets,msg.Sender)
 		if msg.Kind == "Prime"{
-			updateReputation(node.RepMets, msg.Result, msg.Sender, primeScorer)
+			updateReputation(node.RepMets.PrimeMetrics, msg.Result, msg.Sender, primeScorer)
 		} else if msg.Kind == "Hash"{
-			updateReputation(node.RepMets, msg.Result, msg.Sender, hashScorer)
+			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
 	}
 

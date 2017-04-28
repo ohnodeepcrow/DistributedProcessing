@@ -363,7 +363,8 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 		//fmt.Println(text)
 	})
 	btn1 := setup_btn("Train Network with test data", func() {
-
+			trainPrime(nodesoc, nodeinf)
+			trainHash(nodesoc, nodeinf)
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
 	})

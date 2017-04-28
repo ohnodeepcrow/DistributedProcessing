@@ -11,7 +11,7 @@ import (
 
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
-		 if m.Type=="Selected"{
+		 if m.Type=="Selected" && m.Sender!=m.Receiver{
 			ReceiveResult(self,m)
 		}
 }
@@ -29,17 +29,22 @@ func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 			num:=big.NewInt(i)
 			metric = testPrime(*num)
 			ms=metricString(metric)
-
+			nodeinf.RepMets=updateReputation(node.RepMets, metric, node.NodeName, primeScorer)
 			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
 		} else if m.Kind == "Hash" {
 			metric = crackHash(m.Value)
 			ms=hmetricString(metric)
-
+			nodeinf.RepMets=updateReputation(node.RepMets, metric, node.NodeName, hashScorer)
 			msg = encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 		}
-		SendResult(self,node,decode(msg))
+
+		if m.Sender!=m.Receiver{
+			SendResult(self,node,decode(msg))
+		}
+		fmt.Print(ms)
+		fmt.Print(node.RepMets.CurrentMetrics[node.NodeName])
 		updatemsg := encode(node.NodeName, "",m.Kind, ms, m.Job,"Update",node.NodeGroup,"","","",metric,"")
 		nodeSend(updatemsg, self)
 	}

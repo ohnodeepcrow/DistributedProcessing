@@ -40,3 +40,12 @@ func verifyPrime(num big.Int) bool{
 	isPrime := num.ProbablyPrime(2000)
 	return isPrime
 }
+
+func trainPrime(self NodeSocket,nodeinfo NodeInfo){
+	for i:=0;i<10 ;i++  {
+		var m metric
+		msg := encode(nodeinfo.NodeName, nodeinfo.NodeName,"Prime",generateCandidate().String(),getCurrentTimestamp(), "Selected",nodeinfo.NodeGroup,"","","",m,"")
+
+		processRequestReceive(nodeinfo, self ,msg )
+	}
+}

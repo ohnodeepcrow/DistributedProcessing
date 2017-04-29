@@ -11,6 +11,8 @@ type NodeSocket struct {
 	appq	 mutexQueue
 	recvq    mutexQueue
 	dataq 	 mutexQueue // only store the computation result
+	sendq	 mutexQueue
+	lsendq   mutexQueue
 	sendsock *zmq4.Socket //leaf multicast send
 	recvsock *zmq4.Socket //leaf multicast receive
 	leadersendsock *zmq4.Socket //leader multicast send
@@ -57,6 +59,8 @@ func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) Node
 	ret.leadersendsock = lssoc
 
 	ret.recvq = newMutexQueue()
+	ret.sendq = newMutexQueue()
+	ret.lsendq = newMutexQueue()
 	ret.appq = newMutexQueue()
 	ret.dataq = newMutexQueue()
 	return ret
@@ -79,6 +83,8 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
 	ret.recvq = newMutexQueue()
+	ret.sendq = newMutexQueue()
+	ret.lsendq = newMutexQueue()
 	ret.appq = newMutexQueue()
 	ret.dataq = newMutexQueue()
 	return ret
@@ -102,6 +108,8 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
 	ret.recvq = newMutexQueue()
+	ret.sendq = newMutexQueue()
+	ret.lsendq = newMutexQueue()
 	ret.appq = newMutexQueue()
 	ret.dataq = newMutexQueue()
 	return ret
@@ -121,16 +129,18 @@ func establishServer(addr string, port string, socket NodeSocket)*zmq4.Socket{
 	soc.Bind(socstr)
 	return soc
 }
-func nodeSend(str string, soc NodeSocket) error{
-	_, err := soc.sendsock.Send(str, 0)
-	check(err)
-	return err
+func nodeSend(str string, soc NodeSocket){
+	MQpush(soc.sendq,str)
+	//_, err := soc.sendsock.Send(str, 0)
+	//check(err)
+	return
 
 }
-func LeadNodeSend(str string, soc NodeSocket) error{
-	_, err := soc.leadersendsock.Send(str, 0)
-	check(err)
-	return err
+func LeadNodeSend(str string, soc NodeSocket) {
+	//_, err := soc.leadersendsock.Send(str, 0)
+	//check(err)
+	MQpush(soc.lsendq,str)
+	return
 }
 
 func nodeReceive(soc NodeSocket){
@@ -156,7 +166,26 @@ func nodeReceive(soc NodeSocket){
 		time.Sleep(time.Millisecond*50)
 	}
 }
+func startSender (soc NodeSocket){
+	for {
+		if  soc.leader == true{
 
+			s := MQpop(soc.lsendq)
+			if s != nil {
+				msg := fmt.Sprint(s)
+				_, err := soc.leadersendsock.Send(msg, 0)
+				check(err)
+			}
+		}
+		t := MQpop(soc.sendq)
+		if t != nil{
+			m := fmt.Sprint(t)
+			_, err := soc.sendsock.Send(m, 0)
+			check(err)
+		}
+		time.Sleep(time.Millisecond*50)
+	}
+}
 func startReceiver(soc NodeSocket){
 	nodeReceive(soc)
 }

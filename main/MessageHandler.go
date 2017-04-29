@@ -109,7 +109,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 }
 
 /*Master node will call this function after it received a message from a node. It will use send to retransmit the node. */
-func MasterNodeRec(node NodeInfo,self NodeSocket, m string){
+func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 
 	fmt.Print(m+"\n")
 	msg := decode(m)
@@ -121,7 +121,18 @@ func MasterNodeRec(node NodeInfo,self NodeSocket, m string){
 
 		//put the best node in msg.Receiver
 		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
-		nodeSend(m, self)
+		LeadNodeSend(m, self)
+	} else if msg.Type=="Hi" {
+		updateUptime(nm, msg.Sender, msg.Result.NodeInf.Uptime)
+	}else if msg.Type=="Bye"{
+		clearUptime(nm, msg.Sender)
+		var dummy metric
+		var dummyni NodeInfo
+		dummyni.Uptime = node.Uptime
+		dummy.NodeInf = dummyni
+		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
+		LeadNodeSend(retmsg, self)
+
 	}
 }
 
@@ -185,7 +196,7 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 			//println("Retransmitting " + message)
 			LeadNodeRec(selfname, nm, selfsoc, message)
 	} else if selfsoc.master == true {
-		MasterNodeRec(selfnode,selfsoc,message)
+		MasterNodeRec(selfnode,nm,selfsoc,message)
 	}else if m.Kind == "UpdateUptime"{
 		updateUptime(nm, m.Sender, m.Result.NodeInf.Uptime)
 	}else {

@@ -17,8 +17,10 @@ type NodeInfo struct {
 	NodeType	string
 	NodeGroup	string
 	NodeAddr	string
+	MasterAddr	string
 	SendPort	string
 	RecvPort	string
+	BootPort	string
 	LeaderSendPort	string
 	LeaderRecvPort	string
 	Effort 		string
@@ -113,6 +115,10 @@ func ParseNode(nodelines []string) NodeInfo{
 			check(err)
 		}else if strings.Contains(lin,"dsp"){
 			retnode.DataSendPort =  strings.Split(lin,"=")[1]
+
+			check(err)
+		}else if strings.Contains(lin,"BootPort"){
+			retnode.BootPort =  strings.Split(lin,"=")[1]
 
 			check(err)
 		}

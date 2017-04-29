@@ -35,7 +35,7 @@ func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) Node
 	socstr = "tcp://" + self.NodeAddr + ":" + self.RecvPort
 	err = rsoc.Bind(socstr)
 	check(err)
-
+	counter=0
 	lrsoc, err := context.NewSocket(zmq4.SUB)
 	check(err)
 	lssoc, err := context.NewSocket(zmq4.PUSH)
@@ -78,8 +78,8 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	err = rsoc.Bind(socstr)
 	check(err)
 	counter=0
+	establishServer(self.NodeAddr, self.BootPort)
 	var ret NodeSocket
-	groupFull=false
 	ret.leader = false
 	ret.master = true
 	ret.sendsock = ssoc
@@ -117,14 +117,14 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	return ret
 }
 
-func establishClient(addr string, port string, socket NodeSocket) *zmq4.Socket{
+func establishClient(addr string, port string) *zmq4.Socket{
 	context,_ := zmq4.NewContext()
 	soc,_ := context.NewSocket(zmq4.REQ)
 	socstr := "tcp://" + addr + ":" + port
 	soc.Connect(socstr)
 	return soc
 }
-func establishServer(addr string, port string, socket NodeSocket)*zmq4.Socket{
+func establishServer(addr string, port string)*zmq4.Socket{
 	context,_ := zmq4.NewContext()
 	soc,_ := context.NewSocket(zmq4.REP)
 	socstr := "tcp://" + addr + ":" + port
@@ -202,19 +202,50 @@ func startReceiver(soc NodeSocket){
 	nodeReceive(soc)
 }
 
-func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) string{
+func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{
 	MasterAddr := master.NodeAddr
 	MasterPort := master.DataSendPort
-
+	var dummy metric
+	m1 := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Boot","","","","",dummy,"")
 	soc,_ := context.NewSocket(zmq4.REQ)
 	socstr := "tcp://" + MasterAddr + ":" + MasterPort
 	soc.Connect(socstr)
+	soc.Send(m1,0)
 	for {
 		tmp,_ := soc.Recv(zmq4.DONTWAIT)
 		if (tmp != ""){
 			fmt.Print("Received from data soc: "+tmp + "\n")
 
-			return
+			msg:=decode(tmp)
+			if msg.Type=="Leader" {
+
+				dummy.NodeInf=self
+				//say Hi
+
+				if msg.Address =="" && msg.Port==""{
+					ns := establishLeader(context,self,master)
+					return ns
+				} else if msg.Address!=""{
+					LeaderAddr := msg.Address
+					LeaderPort := msg.Port
+
+					soc,_ := context.NewSocket(zmq4.REQ)
+					socstr := "tcp://" + LeaderAddr + ":" + LeaderPort
+					soc.Connect(socstr)
+					m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+					soc.Send(m,0)
+					for{
+						temp,_ := soc.Recv(zmq4.DONTWAIT)
+						m:=decode(temp)
+						if m.Type=="Accepted"{
+							ns := establishMember(context, self, m.Result.NodeInf)
+							return ns
+						}else if m.Type=="Rejected"{
+
+						}
+					}
+
+				}
 		}
 		time.Sleep(time.Millisecond*50)
 	}

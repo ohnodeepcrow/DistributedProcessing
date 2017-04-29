@@ -6,10 +6,10 @@ import (
 	"time"
 	"github.com/pebbe/zmq4"
 	"strings"
+	"context"
 )
 
 var counter int
-var leader string
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
 		 if m.Type=="Selected" && m.Sender!=m.Receiver{
@@ -95,7 +95,18 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
 	}else if msg.Type=="Hi" {
-		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
+		if counter<8{
+			counter++
+			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
+			dummy.NodeInfo=nm.Nodes[node.NodeName]
+			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
+			selfsoc.datasendsock.Send(retmsg,0)
+
+		}else {
+			retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
+			selfsoc.datasendsock.Send(retmsg,0)
+		}
+
 	}else if msg.Type=="Bye"{
 		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
@@ -140,6 +151,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 			nm.Nodes[msg.Sender]=msg.Result.NodeInf
 			leader=msg.Sender
 			counter++
+
 			//return to the node that it is a leader
 		}else {
 			//establish member assign the last leader
@@ -247,7 +259,7 @@ func ReceiveResult(self NodeSocket,msg Message){
 func SendResult(self NodeSocket, node NodeInfo, m Message){
 	addr:=node.NodeAddr
 	port:=node.DataSendPort
-	send_sock:= establishServer(addr,port,self)
+	send_sock:= establishServer(addr,port)
 	t,_ :=(send_sock.GetIdentity())
 	fmt.Print(t +"\n")
 	i,_:= strconv.ParseInt(m.Value,10,64)

@@ -161,6 +161,16 @@ func nodeReceive(soc NodeSocket){
 				continue
 			}
 		}
+		if soc.master == true{
+			tmp2,err := soc.datasendsock.Recv(zmq4.DONTWAIT)
+			if tmp2 != "" {
+
+				MQpush(soc.recvq, tmp2)
+			}
+			if err == syscall.EAGAIN {
+				continue
+			}
+		}
 		if err == syscall.EAGAIN {
 			continue
 		}

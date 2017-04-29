@@ -6,10 +6,11 @@ import (
 	"time"
 	"github.com/pebbe/zmq4"
 	"strings"
-	"context"
+	_"context"
 )
 
 var counter int
+var leader string
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
 		 if m.Type=="Selected" && m.Sender!=m.Receiver{
@@ -60,6 +61,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	node := nm.Nodes[selfname]
 	fmt.Print(m+"\n")
 	msg:=decode(m)
+	var dummy metric
 
 	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
@@ -98,7 +100,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		if counter<8{
 			counter++
 			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
-			dummy.NodeInfo=nm.Nodes[node.NodeName]
+			dummy.NodeInf=nm.Nodes[node.NodeName]
 			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
 			selfsoc.datasendsock.Send(retmsg,0)
 
@@ -146,17 +148,19 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		LeadNodeSend(retmsg, self)
 
 	}else if msg.Type=="Boot"{
-		if counter==0 || counter%7==0{
-			//establish the node as leader
-			nm.Nodes[msg.Sender]=msg.Result.NodeInf
-			leader=msg.Sender
-			counter++
+		context,_ := zmq4.NewContext()
+		soc,_ := context.NewSocket(zmq4.REP)
+		socstr := "tcp://" + node.NodeAddr + ":" + node.DataSendPort
+		soc.Bind(socstr)
+		for leader,nodeinfo := range nm.Nodes{
 
-			//return to the node that it is a leader
-		}else {
-			//establish member assign the last leader
-
+			if (leader != node.NodeName){
+				msg := encode(leader,"","","","Leader","","","",nodeinfo.NodeAddr,nodeinfo.LeaderSendPort,dummy,"")
+				soc.Send(msg,0)
+			}
 		}
+		msg := encode(leader,"","","","Leader","","","","done","done",dummy,"")
+		soc.Send(msg,0)
 
 	}
 }
@@ -240,7 +244,7 @@ func startMessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 func ReceiveResult(self NodeSocket,msg Message){
 	addr:=msg.Address
 	port:=msg.Port
-	soc :=establishClient(addr,port,self)
+	soc :=establishClient(addr,port)
 	soc.Send("req",0)
 	for {
 		tmp,_ := soc.Recv(zmq4.DONTWAIT)

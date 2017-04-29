@@ -53,25 +53,11 @@ self = myNodeMap.Nodes[selfstr]
 	-If Member: get group uptimes
 		-Happens via bootstrap message
 */
-var myleader NodeInfo
-if self.NodeType == "leader"{
-	var ma NodeInfo
-	ma = master
-	ns = establishLeader(cntxt,self,ma)
-} else if self.NodeType == "master"{
+	
+if self.NodeType == "master"{
 	ns = establishMaster(cntxt, self)
 }else{
-	ns  := BootStrap(cntxt,self,master)
-if nodetype == "leader"{
-
-}
-ns = establishMember(cntxt, self, myleader)
-
-var dummy metric
-dummy.NodeInf=self
-//say Hi
-msg := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
-nodeSend(string(msg), ns)
+	ns  = BootStrap(cntxt,self,master)
 }
 go startReceiver(ns)
 go startSender(ns)

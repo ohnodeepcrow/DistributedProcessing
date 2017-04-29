@@ -69,7 +69,7 @@ func main(){
 		ns = establishMember(cntxt, self, myleader)
 
 		var dummy metric
-		dummy.Uptime=self.Uptimes.Uptimes[self.NodeName].time
+		dummy.Uptimes=self.Uptimes
 		//say Hi
 		msg := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
 		nodeSend(string(msg), ns)

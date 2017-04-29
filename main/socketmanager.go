@@ -189,3 +189,23 @@ func startSender (soc NodeSocket){
 func startReceiver(soc NodeSocket){
 	nodeReceive(soc)
 }
+
+func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) string{
+	MasterAddr := master.NodeAddr
+	MasterPort := master.DataSendPort
+
+	soc,_ := context.NewSocket(zmq4.REQ)
+	socstr := "tcp://" + MasterAddr + ":" + MasterPort
+	soc.Connect(socstr)
+	for {
+		tmp,_ := soc.Recv(zmq4.DONTWAIT)
+		if (tmp != ""){
+			fmt.Print("Received from data soc: "+tmp + "\n")
+
+			return
+		}
+		time.Sleep(time.Millisecond*50)
+	}
+
+
+}

@@ -64,10 +64,9 @@ func main(){
 	} else if self.NodeType == "master"{
 		ns = establishMaster(cntxt, self)
 	}else{
-		if (self.NodeGroup == "group1") {
-			myleader = leader1
-		}else if (self.NodeGroup == "group2"){
-			myleader = leader2
+		nodetype  := BootStrap(cntxt,self,master)
+		if nodetype == "leader"{
+
 		}
 		ns = establishMember(cntxt, self, myleader)
 

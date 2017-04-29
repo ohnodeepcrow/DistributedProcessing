@@ -12,7 +12,7 @@ type metric struct {
 	IsPrime bool
 	hPerf time.Duration
 	Val string
-	Uptimes Uptimes
+	NodeInf NodeInfo
 }
 
 //Maps node name/ID to Reputation and busy status
@@ -29,27 +29,31 @@ type Reputation struct {
 }
 
 //Map that maps node names to the first time that node was seen
-type Uptimes struct{
-	Uptimes map[string]Uptime
+type NodeMap struct{
+	Nodes map[string]NodeInfo
 }
 
-type Uptime struct{
-	time time.Time
-}
-
-func establishNode(self NodeInfo) NodeInfo{
-	self.Uptimes = newUptimes(self.NodeName)
+func initializeNode(self NodeInfo, master NodeInfo) NodeMap{
+	nm := newNodeMap(self.NodeName)
+	nm.Nodes[master.NodeName] = master
 	self.RepMets = newRepMetrics(self.NodeName)
-	return self
+	return nm
 }
 
-func newUptimes(name string)Uptimes{
-	var ret Uptimes
-	ret.Uptimes = make(map[string]Uptime)
-	var tmp Uptime
-	tmp.time = time.Now()
-	ret.Uptimes[name] = tmp
+func newNodeInfo(name string, ut time.Time) NodeInfo{
+	var ret NodeInfo
+	ret.NodeName = name
+	ret.Uptime = ut
+	//TODO: ensure all needed fields are filled in
+	return ret
+}
 
+func newNodeMap(selfname string)NodeMap{
+	var ret NodeMap
+	ret.Nodes = make(map[string]NodeInfo)
+	var tmp NodeInfo
+	tmp.Uptime = time.Now()
+	ret.Nodes[selfname] = tmp
 	return ret
 }
 
@@ -108,30 +112,30 @@ func setFree(metrics RepMetrics, nodename string){
 }
 
 //If a node doesn't currently have an uptime, add one
-func updateUptime(ut Uptimes, name string, newtime Uptime) bool{
-	_, ok := ut.Uptimes[name]
+func updateUptime(nm NodeMap, name string, newtime time.Time) bool{
+	_, ok := nm.Nodes[name]
 	if !ok{
-		ut.Uptimes[name] = newtime
+		nm.Nodes[name] = newNodeInfo(name, newtime)
 		return true
 	}
 	return false
 }
 
 //Remove the uptime associated with a node
-func clearUptime(ut Uptimes, name string){
-	delete(ut.Uptimes, name)
+func clearUptime(nm NodeMap, name string){
+	delete(nm.Nodes, name)
 }
 
-func getLongestUptime(ut Uptimes) (string,Uptime){
+func getLongestUptime(nm NodeMap) (string,time.Time){
 	longest := time.Now()
 	lname := ""
-	for k,v := range ut.Uptimes{
-		if longest.After(v.time){
-			longest = v.time
+	for k,v := range nm.Nodes{
+		if longest.After(v.Uptime){
+			longest = v.Uptime
 			lname = k
 		}
 	}
-	return lname, ut.Uptimes[lname]
+	return lname, nm.Nodes[lname].Uptime
 }
 
 //Scorer should take in the current reputation and the new result and update the reputation as a result

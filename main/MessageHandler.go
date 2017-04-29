@@ -55,12 +55,13 @@ func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 
 
 /*Lead node will call this function after it received a message from a node. It will use send to retransmit the node. */
-func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
+func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
+	node := nm.Nodes[selfname]
 	fmt.Print(m+"\n")
 	msg:=decode(m)
 
 	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
-		LeadNodeSend(m, self) // group node forwards the request to master node
+		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
 	} else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
 		
 		//reply to master node with the best node
@@ -70,7 +71,7 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 		setBusy(node.RepMets, bestname, msg.Job)
 		var m metric
 		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
-		LeadNodeSend(retmsg, self)
+		LeadNodeSend(retmsg, selfsoc)
 	} else if msg.Type=="Selected" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		//update busy list
 
@@ -84,7 +85,7 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 			}
 		}
 
-		nodeSend(m,self)
+		nodeSend(m, selfsoc)
 	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		setFree(node.RepMets,msg.Sender)
 		if msg.Kind == "Prime"{
@@ -93,13 +94,15 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
 	}else if msg.Type=="Hi" {
-		updateUptime(node.Uptimes, msg.Sender, msg.Result.Uptimes.Uptimes[node.NodeName])
+		updateUptime(nm, msg.Sender, msg.Result.NodeInf.Uptime)
 	}else if msg.Type=="Bye"{
-		clearUptime(node.Uptimes, msg.Sender)
+		clearUptime(nm, msg.Sender)
 		var dummy metric
-		dummy.Uptimes=node.Uptimes
+		var dummyni NodeInfo
+		dummyni.Uptime = node.Uptime
+		dummy.NodeInf = dummyni
 		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
-		nodeSend(retmsg, self)
+		nodeSend(retmsg, selfsoc)
 
 	}
 
@@ -163,39 +166,38 @@ func MasterNodeMet(node NodeInfo,self NodeSocket, msg string) string {
 }
 
 
-func MessageHandler(node NodeInfo, self NodeSocket){
+func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 
-	s := MQpop(self.recvq)
+	selfnode := nm.Nodes[selfname]
+
+	s := MQpop(selfsoc.recvq)
 	if s == nil{
 		return
 	}
 	message := fmt.Sprint(s)
 	m:= decode(message)
-	if m.Receiver == node.NodeName {
-		processRequestReceive(node, self, message)
-	}else if  m.Sender == node.NodeName {
-		processRequestSend(node, self, message)
+	if m.Receiver == selfname {
+		processRequestReceive(selfnode, selfsoc, message)
+	}else if  m.Sender == selfname {
+		processRequestSend(selfnode, selfsoc, message)
 
-	} else if self.leader == true {
+	} else if selfsoc.leader == true {
 			//println("Retransmitting " + message)
-			LeadNodeRec(node, self, message)
-	} else if self.master == true {
-		MasterNodeRec(node,self,message)
+			LeadNodeRec(selfname, nm, selfsoc, message)
+	} else if selfsoc.master == true {
+		MasterNodeRec(selfnode,selfsoc,message)
 	}else if m.Kind == "UpdateUptime"{
-		for k,v := range m.Result.Uptimes.Uptimes{
-			if k!=node.NodeName{
-				updateUptime(node.Uptimes, k, v)
-			}
-		}
+		updateUptime(nm, m.Sender, m.Result.NodeInf.Uptime)
 	}else {
 		return //drop message
 	}
 }
 
-func startMessageHandler(node NodeInfo, self NodeSocket){
+func startMessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	for{
+
 		time.Sleep(time.Millisecond*50)
-		MessageHandler(node,self)
+		MessageHandler(selfname, nm, selfsoc)
 	}
 }
 

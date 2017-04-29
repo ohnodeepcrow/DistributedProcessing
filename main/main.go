@@ -41,7 +41,10 @@ func main(){
 	setDict()
 
 	var ns NodeSocket
-	self = establishNode(self)
+	var myNodeMap NodeMap
+	myNodeMap = initializeNode(self, master)
+
+	self = myNodeMap.Nodes[selfstr]
 	/*TODO:
 
 		-If Leader: get group uptimes, group reputations, leader uptimes
@@ -69,15 +72,16 @@ func main(){
 		ns = establishMember(cntxt, self, myleader)
 
 		var dummy metric
-		dummy.Uptimes=self.Uptimes
+		dummy.NodeInf=self
 		//say Hi
 		msg := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
 		nodeSend(string(msg), ns)
 	}
 	go startReceiver(ns)
-	go startMessageHandler(self, ns)
+	go startSender(ns)
+	go startMessageHandler(self.NodeName, myNodeMap, ns)
 	go startIO(cntxt, ns, self)
 	go startUI(ns, self)
-	go startSender(ns)
+
 	wg.Wait()
 }

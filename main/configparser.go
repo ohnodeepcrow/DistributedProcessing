@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"fmt"
+	"time"
 )
 
 type Configs struct{
@@ -24,7 +25,7 @@ type NodeInfo struct {
 	DataRecvPort 	string
 	DataSendPort	string
 	RepMets		RepMetrics
-	Uptimes		Uptimes
+	Uptime		time.Time
 }
 
 // Reads info from config file

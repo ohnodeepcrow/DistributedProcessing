@@ -97,7 +97,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	}else if msg.Type=="Hi" {
 		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 	}else if msg.Type=="Bye"{
-		clearUptime(nm, msg.Sender)
+		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
 		var dummyni NodeInfo
 		dummyni.Uptime = node.Uptime
@@ -124,9 +124,9 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		LeadNodeSend(m, self)
 	} else if msg.Type=="Hi" {
-		updateUptime(nm, msg.Sender, msg.Result.NodeInf.Uptime)
+		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 	}else if msg.Type=="Bye"{
-		clearUptime(nm, msg.Sender)
+		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
 		var dummyni NodeInfo
 		dummyni.Uptime = node.Uptime

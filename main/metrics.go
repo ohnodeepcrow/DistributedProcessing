@@ -111,18 +111,18 @@ func setFree(metrics RepMetrics, nodename string){
 	metrics.Busy[nodename] = ""
 }
 
-//If a node doesn't currently have an uptime, add one
-func updateUptime(nm NodeMap, name string, newtime time.Time) bool{
+//If a node doesn't currently have a node's nodeinfo, add one
+func updateNodeInfo(nm NodeMap, name string, newinfo NodeInfo) bool{
 	_, ok := nm.Nodes[name]
 	if !ok{
-		nm.Nodes[name] = newNodeInfo(name, newtime)
+		nm.Nodes[name] = newinfo
 		return true
 	}
 	return false
 }
 
-//Remove the uptime associated with a node
-func clearUptime(nm NodeMap, name string){
+//Remove the nodeinfo associated with a node
+func clearNodeInfo(nm NodeMap, name string){
 	delete(nm.Nodes, name)
 }
 

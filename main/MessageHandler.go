@@ -6,6 +6,7 @@ import (
 	"time"
 	"github.com/pebbe/zmq4"
 	"strings"
+	_"context"
 )
 
 var counter int
@@ -60,6 +61,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	node := nm.Nodes[selfname]
 	fmt.Print(m+"\n")
 	msg:=decode(m)
+	var dummy metric
 
 	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
@@ -95,7 +97,18 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
 	}else if msg.Type=="Hi" {
-		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
+		if counter<8{
+			counter++
+			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
+			dummy.NodeInf=nm.Nodes[node.NodeName]
+			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
+			selfsoc.datasendsock.Send(retmsg,0)
+
+		}else {
+			retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
+			selfsoc.datasendsock.Send(retmsg,0)
+		}
+
 	}else if msg.Type=="Bye"{
 		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
@@ -104,7 +117,6 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		dummy.NodeInf = dummyni
 		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
 		nodeSend(retmsg, selfsoc)
-
 
 	}
 
@@ -232,7 +244,7 @@ func startMessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 func ReceiveResult(self NodeSocket,msg Message){
 	addr:=msg.Address
 	port:=msg.Port
-	soc :=establishClient(addr,port,self)
+	soc :=establishClient(addr,port)
 	soc.Send("req",0)
 	for {
 		tmp,_ := soc.Recv(zmq4.DONTWAIT)
@@ -251,7 +263,7 @@ func ReceiveResult(self NodeSocket,msg Message){
 func SendResult(self NodeSocket, node NodeInfo, m Message){
 	addr:=node.NodeAddr
 	port:=node.DataSendPort
-	send_sock:= establishServer(addr,port,self)
+	send_sock:= establishServer(addr,port)
 	t,_ :=(send_sock.GetIdentity())
 	fmt.Print(t +"\n")
 	i,_:= strconv.ParseInt(m.Value,10,64)

@@ -12,6 +12,7 @@ type metric struct {
 	IsPrime bool
 	hPerf time.Duration
 	Val string
+	Uptimes Uptimes
 }
 
 //Maps node name/ID to Reputation and busy status
@@ -48,6 +49,7 @@ func newUptimes(name string)Uptimes{
 	var tmp Uptime
 	tmp.time = time.Now()
 	ret.Uptimes[name] = tmp
+
 	return ret
 }
 
@@ -165,6 +167,6 @@ func primeScorer(met metric, rep Reputation) Reputation{
 		rep.Correct += 1
 	}
 	rep.Count += 1
-	rep.Score = rep.Correct / rep.Count
+	rep.Score = (rep.Correct*1.0) / (rep.Count *1.0)* 100
 	return rep
 }

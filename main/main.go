@@ -67,6 +67,12 @@ func main(){
 			myleader = leader2
 		}
 		ns = establishMember(cntxt, self, myleader)
+
+		var dummy metric
+		dummy.Uptime=self.Uptimes.Uptimes[self.NodeName].time
+		//say Hi
+		msg := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+		nodeSend(string(msg), ns)
 	}
 	go startReceiver(ns)
 	go startMessageHandler(self, ns)

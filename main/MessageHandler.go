@@ -92,6 +92,15 @@ func LeadNodeRec(node NodeInfo,self NodeSocket, m string){
 		} else if msg.Kind == "Hash"{
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
+	}else if msg.Type=="Hi" {
+		updateUptime(node.Uptimes, msg.Sender, msg.Result.Uptimes.Uptimes[node.NodeName])
+	}else if msg.Type=="Bye"{
+		clearUptime(node.Uptimes, msg.Sender)
+		var dummy metric
+		dummy.Uptimes=node.Uptimes
+		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
+		nodeSend(retmsg, self)
+
 	}
 
 }
@@ -172,7 +181,13 @@ func MessageHandler(node NodeInfo, self NodeSocket){
 			LeadNodeRec(node, self, message)
 	} else if self.master == true {
 		MasterNodeRec(node,self,message)
-	}else{
+	}else if m.Kind == "UpdateUptime"{
+		for k,v := range m.Result.Uptimes.Uptimes{
+			if k!=node.NodeName{
+				updateUptime(node.Uptimes, k, v)
+			}
+		}
+	}else {
 		return //drop message
 	}
 }

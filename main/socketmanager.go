@@ -23,8 +23,6 @@ type NodeSocket struct {
 	master bool //Am I the root node?
 }
 
-var Members map[string]int
-var groupFull bool
 
 func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{
 	ssoc, err := context.NewSocket(zmq4.PUB)

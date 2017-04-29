@@ -143,11 +143,11 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		for leader,nodeinfo := range nm.Nodes{
 
 			if (leader != node.NodeName){
-				msg := encode(leader,"","","","leader","","","",nodeinfo.NodeAddr,nodeinfo.LeaderSendPort,dummy,"")
+				msg := encode(leader,"","","","Leader","","","",nodeinfo.NodeAddr,nodeinfo.LeaderSendPort,dummy,"")
 				soc.Send(msg,0)
 			}
 		}
-		msg := encode(leader,"","","","leader","","","","done","done",dummy,"")
+		msg := encode(leader,"","","","Leader","","","","done","done",dummy,"")
 		soc.Send(msg,0)
 
 	}

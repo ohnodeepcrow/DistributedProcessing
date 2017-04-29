@@ -105,6 +105,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
 		nodeSend(retmsg, selfsoc)
 
+
 	}
 
 }
@@ -135,16 +136,19 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		LeadNodeSend(retmsg, self)
 
 	}else if msg.Type=="Boot"{
-		if counter==0 || counter%7==0{
-			//establish the node as leader
-			nm.Nodes[msg.Sender]=msg.Result.NodeInf
-			leader=msg.Sender
-			counter++
-			//return to the node that it is a leader
-		}else {
-			//establish member assign the last leader
+		context,_ := zmq4.NewContext()
+		soc,_ := context.NewSocket(zmq4.REP)
+		socstr := "tcp://" + node.NodeAddr + ":" + node.DataSendPort
+		soc.Bind(socstr)
+		for leader,nodeinfo := range nm.Nodes{
 
+			if (leader != node.NodeName){
+				msg := encode(leader,"","","","leader","","","",nodeinfo.NodeAddr,nodeinfo.LeaderSendPort,dummy,"")
+				soc.Send(msg,0)
+			}
 		}
+		msg := encode(leader,"","","","leader","","","","done","done",dummy,"")
+		soc.Send(msg,0)
 
 	}
 }

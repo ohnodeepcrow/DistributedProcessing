@@ -23,6 +23,9 @@ type NodeSocket struct {
 	master bool //Am I the root node?
 }
 
+var Members map[string]int
+var groupFull bool
+
 func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{
 	ssoc, err := context.NewSocket(zmq4.PUB)
 	check(err)
@@ -76,8 +79,9 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	socstr = "tcp://" + self.NodeAddr + ":" + self.RecvPort
 	err = rsoc.Bind(socstr)
 	check(err)
-
+	counter=0
 	var ret NodeSocket
+	groupFull=false
 	ret.leader = false
 	ret.master = true
 	ret.sendsock = ssoc

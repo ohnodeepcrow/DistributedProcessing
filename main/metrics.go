@@ -15,6 +15,8 @@ type metric struct {
 	NodeInf NodeInfo
 }
 
+
+
 //Maps node name/ID to Reputation and busy status
 type RepMetrics struct {
 	HashMetrics map[string]Reputation

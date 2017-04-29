@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-
+var counter int
+var leader string
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
 		 if m.Type=="Selected" && m.Sender!=m.Receiver{
@@ -132,6 +133,18 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		dummy.NodeInf = dummyni
 		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
 		LeadNodeSend(retmsg, self)
+
+	}else if msg.Type=="Boot"{
+		if counter==0 || counter%7==0{
+			//establish the node as leader
+			nm.Nodes[msg.Sender]=msg.Result.NodeInf
+			leader=msg.Sender
+			counter++
+			//return to the node that it is a leader
+		}else {
+			//establish member assign the last leader
+
+		}
 
 	}
 }

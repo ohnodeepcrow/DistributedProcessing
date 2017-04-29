@@ -214,7 +214,7 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 	metric := testPrime(*num)
 	ms:=metricString(metric)
 	msg := encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
-	fmt.Print(string(msg) + "\n")
+	fmt.Print(string(msg)+ "\n")
 	for {
 		signal,_ := send_sock.Recv(zmq4.DONTWAIT)
 		if (signal != ""){

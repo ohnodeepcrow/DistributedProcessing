@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-
+var counter int
+var leader string
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 	m:= decode(input)
 		 if m.Type=="Selected" && m.Sender!=m.Receiver{
@@ -94,9 +95,9 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
 	}else if msg.Type=="Hi" {
-		updateUptime(nm, msg.Sender, msg.Result.NodeInf.Uptime)
+		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 	}else if msg.Type=="Bye"{
-		clearUptime(nm, msg.Sender)
+		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
 		var dummyni NodeInfo
 		dummyni.Uptime = node.Uptime
@@ -123,15 +124,27 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		LeadNodeSend(m, self)
 	} else if msg.Type=="Hi" {
-		updateUptime(nm, msg.Sender, msg.Result.NodeInf.Uptime)
+		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 	}else if msg.Type=="Bye"{
-		clearUptime(nm, msg.Sender)
+		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
 		var dummyni NodeInfo
 		dummyni.Uptime = node.Uptime
 		dummy.NodeInf = dummyni
 		retmsg := encode(node.NodeName, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
 		LeadNodeSend(retmsg, self)
+
+	}else if msg.Type=="Boot"{
+		if counter==0 || counter%7==0{
+			//establish the node as leader
+			nm.Nodes[msg.Sender]=msg.Result.NodeInf
+			leader=msg.Sender
+			counter++
+			//return to the node that it is a leader
+		}else {
+			//establish member assign the last leader
+
+		}
 
 	}
 }
@@ -198,7 +211,7 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)
 	}else if m.Kind == "UpdateUptime"{
-		updateUptime(nm, m.Sender, m.Result.NodeInf.Uptime)
+		updateNodeInfo(nm, m.Sender, m.Result.NodeInf)
 	}else {
 		return //drop message
 	}

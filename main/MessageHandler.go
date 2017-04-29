@@ -95,7 +95,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
 	}else if msg.Type=="Hi" {
-		updateUptime(nm, msg.Sender, msg.Result.NodeInf.Uptime)
+		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 	}else if msg.Type=="Bye"{
 		clearUptime(nm, msg.Sender)
 		var dummy metric
@@ -211,7 +211,7 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)
 	}else if m.Kind == "UpdateUptime"{
-		updateUptime(nm, m.Sender, m.Result.NodeInf.Uptime)
+		updateNodeInfo(nm, m.Sender, m.Result.NodeInf)
 	}else {
 		return //drop message
 	}

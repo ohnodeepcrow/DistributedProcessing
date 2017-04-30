@@ -48,15 +48,17 @@ func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) Node
 	err = lrsoc.Connect(socstr)
 	check(err)
 
+	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+
 
 	fmt.Print("")
 	var ret NodeSocket
 	ret.leader = true
+	ret.datasendsock=ds
 	ret.master = false
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
 
-	ds:=establishServer(self.NodeAddr, self.DataSendPort)
 	ret.datasendsock=ds
 
 	ret.leaderrecvsock = lrsoc
@@ -205,7 +207,7 @@ func startReceiver(soc NodeSocket){
 	nodeReceive(soc)
 }
 
-func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{
+func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap) NodeSocket{
 	MasterAddr := master.NodeAddr
 	MasterPort := master.DataSendPort
 	var dummy metric
@@ -228,7 +230,10 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket
 
 				if msg.Address =="" && msg.Port==""{
 					ns := establishLeader(context,self,master)
+					m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+					LeadNodeSend(m,ns)
 					return ns
+
 				} else if msg.Address!=""{
 					LeaderAddr := msg.Address
 					LeaderPort := msg.Port
@@ -243,7 +248,18 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket
 						m:=decode(temp)
 						if m.Type=="Accepted"{
 							ns := establishMember(context, self, m.Result.NodeInf)
-							return ns
+							for {
+								tmp,_ := soc.Recv(zmq4.DONTWAIT)
+								if (tmp != "") {
+									msg:=decode(tmp)
+									if msg.Type=="UpdateUptime" {
+										updateNodeInfo(nm,msg.Sender,msg.Result.NodeInf)
+									}else if msg.Type=="End"{
+										return ns
+									}
+								}
+							}
+
 						}else if m.Type=="Rejected"{
 
 						}

@@ -57,8 +57,9 @@ func main(){
 	if self.NodeType == "master"{
 		ns = establishMaster(cntxt, self)
 	}else{
-		ns  = BootStrap(cntxt,self,master)
+		ns  = BootStrap(cntxt,self,master, myNodeMap)
 		if  ns.leader==true{
+			self.Leader=true
 			var dummy metric
 			dummy.NodeInf=self
 			m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")

@@ -56,6 +56,9 @@ func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) Node
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
 
+	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+	ret.datasendsock=ds
+
 	ret.leaderrecvsock = lrsoc
 	ret.leadersendsock = lssoc
 
@@ -149,6 +152,12 @@ func LeadNodeSend(str string, soc NodeSocket) {
 func nodeReceive(soc NodeSocket){
 	for {
 		tmp,err := soc.recvsock.Recv(zmq4.DONTWAIT)
+		if err == syscall.EAGAIN {
+			continue
+		}
+		if tmp != "" {
+			MQpush(soc.recvq, tmp)
+		}
 		if soc.leader == true{
 			tmp1,err := soc.leaderrecvsock.Recv(zmq4.DONTWAIT)
 
@@ -160,21 +169,12 @@ func nodeReceive(soc NodeSocket){
 				continue
 			}
 		}
-		if soc.master == true{
-			tmp2,err := soc.datasendsock.Recv(zmq4.DONTWAIT)
-			if tmp2 != "" {
-
-				MQpush(soc.recvq, tmp2)
-			}
-			if err == syscall.EAGAIN {
-				continue
-			}
+		tmp2,err := soc.datasendsock.Recv(zmq4.DONTWAIT)
+		if tmp2 != "" {
+			MQpush(soc.recvq, tmp2)
 		}
 		if err == syscall.EAGAIN {
 			continue
-		}
-		if tmp != "" {
-			MQpush(soc.recvq, tmp)
 		}
 		time.Sleep(time.Millisecond*50)
 	}

@@ -207,6 +207,7 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket
 	MasterAddr := master.NodeAddr
 	MasterPort := master.DataSendPort
 	var dummy metric
+	dummy.NodeInf=self
 	m1 := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Boot","","","","",dummy,"")
 	soc,_ := context.NewSocket(zmq4.REQ)
 	socstr := "tcp://" + MasterAddr + ":" + MasterPort

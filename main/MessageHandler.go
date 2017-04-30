@@ -150,7 +150,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	}else if msg.Type=="Boot"{
 		context,_ := zmq4.NewContext()
 		soc,_ := context.NewSocket(zmq4.REP)
-		socstr := "tcp://" + node.NodeAddr + ":" + node.DataSendPort
+		socstr := "tcp://" + msg.Result.NodeInf.NodeAddr + ":" + msg.Result.NodeInf.DataSendPort
 		soc.Bind(socstr)
 		for leader,nodeinfo := range nm.Nodes{
 

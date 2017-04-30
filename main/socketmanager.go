@@ -78,8 +78,9 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	err = rsoc.Bind(socstr)
 	check(err)
 	counter=0
-	establishServer(self.NodeAddr, self.BootPort)
+	ds:=establishServer(self.NodeAddr, self.DataSendPort)
 	var ret NodeSocket
+	ret.datasendsock=ds
 	ret.leader = false
 	ret.master = true
 	ret.sendsock = ssoc

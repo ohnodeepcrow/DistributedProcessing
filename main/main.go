@@ -58,6 +58,12 @@ if self.NodeType == "master"{
 	ns = establishMaster(cntxt, self)
 }else{
 	ns  = BootStrap(cntxt,self,master)
+	if  ns.leader==true{
+		var dummy metric
+		dummy.NodeInf=self
+		m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+		LeadNodeSend(m,ns)
+	}
 }
 go startReceiver(ns)
 go startSender(ns)

@@ -109,6 +109,8 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	check(err)
 
 	var ret NodeSocket
+	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+	ret.datasendsock=ds
 	ret.leader = false
 	ret.master = false
 	ret.sendsock = ssoc

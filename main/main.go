@@ -58,12 +58,15 @@ func main(){
 		ns = establishMaster(cntxt, self)
 	}else{
 		ns  = BootStrap(cntxt,self,master, myNodeMap)
-		if  ns.leader==true{
+
 			self.Leader=true
 			var dummy metric
 			dummy.NodeInf=self
 			m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+		if  ns.leader==true{
 			LeadNodeSend(m,ns)
+		}else{
+			nodeSend(m,ns)
 		}
 	}
 	go startReceiver(ns)

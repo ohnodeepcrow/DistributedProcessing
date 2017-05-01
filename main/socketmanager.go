@@ -275,6 +275,7 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 							return ns
 
 						}else if m.Type=="Rejected"{
+							fmt.Println("Rejected by: " + m.Sender)
 							break
 						}
 					}

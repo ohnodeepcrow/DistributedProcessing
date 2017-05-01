@@ -241,7 +241,7 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 					soc,_ := context.NewSocket(zmq4.REQ)
 					socstr := "tcp://" + LeaderAddr + ":" + LeaderPort
 					soc.Connect(socstr)
-					m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+					m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Connect","","","","",dummy,"")
 					soc.Send(m,0)
 					for{
 						temp,_ := soc.Recv(zmq4.DONTWAIT)
@@ -251,17 +251,9 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 						m:=decode(temp)
 						if m.Type=="Accepted"{
 							ns := establishMember(context, self, m.Result.NodeInf)
-							for {
-								tmp,_ := soc.Recv(zmq4.DONTWAIT)
-								if (tmp != "") {
-									msg:=decode(tmp)
-									if msg.Type=="UpdateUptime" {
-										updateNodeInfo(nm,msg.Sender,msg.Result.NodeInf)
-									}else if msg.Type=="End"{
-										return ns
-									}
-								}
-							}
+							m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+							nodeSend(m,ns)
+							return ns
 
 						}else if m.Type=="Rejected"{
 

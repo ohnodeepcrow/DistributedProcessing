@@ -96,7 +96,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		} else if msg.Kind == "Hash"{
 			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
 		}
-	}else if msg.Type=="Hi" {
+	}else if msg.Type=="Connect" {
 		if counter<8{
 			counter++
 			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
@@ -105,22 +105,22 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
 			selfsoc.datasendsock.Send(retmsg,0)
 
-			for k,v := range nm.Nodes{
-				if v.Leader==false{
+		}else {
+		retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
+		selfsoc.datasendsock.Send(retmsg,0)
+		}
+
+	}else if msg.Type=="Hi" {
+			for k,v := range nm.Nodes {
+				if v.Leader == false {
 					var dummy metric
 					dummy.NodeInf = v
-					up := encode(k, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
-					selfsoc.datasendsock.Send(up,0)
+					up := encode(k, "", "", "", "", "UpdateUptime", "", "", "", "", dummy, "")
+					nodeSend(up,selfsoc)
 				}
-
-			up := encode(k, "", "", "","", "End", "","", "", "", dummy,"")
-			selfsoc.datasendsock.Send(up,0)
 			}
-
-		}else {
-			retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
-			selfsoc.datasendsock.Send(retmsg,0)
-		}
+				up := encode("", "", "", "", "", "End", "", "", "", "", dummy, "")
+				nodeSend(up,selfsoc)
 
 	}else if msg.Type=="Bye"{
 		clearNodeInfo(nm, msg.Sender)

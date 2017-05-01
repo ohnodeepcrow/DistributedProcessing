@@ -15,15 +15,6 @@ type metric struct {
 	NodeInf NodeInfo
 }
 
-
-
-//Maps node name/ID to Reputation and busy status
-type RepMetrics struct {
-	HashMetrics map[string]Reputation
-	PrimeMetrics map[string]Reputation
-	Busy map[string]string
-}
-
 type Reputation struct {
 	Score		int
 	Count		int
@@ -38,7 +29,7 @@ type NodeMap struct{
 func initializeNode(self NodeInfo, master NodeInfo) NodeMap{
 	nm := newNodeMap(self.NodeName)
 	nm.Nodes[master.NodeName] = master
-	self.RepMets = newRepMetrics(self.NodeName)
+	self.PrimeMetric, self.HashMetric, self.Busy = newRepMetrics()
 	return nm
 }
 
@@ -59,58 +50,68 @@ func newNodeMap(selfname string)NodeMap{
 	return ret
 }
 
-func newRepMetrics(name string)RepMetrics{
-	var ret RepMetrics
-	ret.PrimeMetrics = make(map[string]Reputation)
-	ret.HashMetrics = make(map[string]Reputation)
-	ret.Busy = make(map[string]string)
-	var tmp Reputation
-	tmp.Correct = 0
-	tmp.Count = 0
-	tmp.Score = 0
-	ret.PrimeMetrics[name] = tmp
-	ret.HashMetrics[name] = tmp
-	return ret
+func newRepMetrics() (Reputation, Reputation, string){
+	var tmp1 Reputation
+	var tmp2 Reputation
+	tmp2.Correct = 0
+	tmp2.Count = 0
+	tmp2.Score = 0
+	tmp1.Correct = 0
+	tmp1.Count = 0
+	tmp1.Score = 0
+	return tmp1, tmp2, ""
 }
 
-func getChildren(metrics RepMetrics) []string{
-	keys := make([]string, len(metrics.Busy))
-
-	i := 0
-	for k,_ := range metrics.Busy {
-		keys[i] = k
-		i++
+func getChildren(nm NodeMap) []string{
+	keys := make([]string, len(nm.Nodes))
+	for k,v := range nm.Nodes {
+		if (!v.Leader) && (!v.Master){
+			keys = append(keys, k)
+		}
 	}
 	return keys
 }
 
-func getBestFreeScore(metrics RepMetrics, probtype string) (string, int){
-	bestscore := 0
-	bestname := ""
-	var probmap map[string]Reputation
-	probmap = metrics.PrimeMetrics
-	if probtype == "Hash"{
-		probmap = metrics.HashMetrics
-	}
-	for k,v := range probmap{
-		if (v.Score > bestscore) && (metrics.Busy[k] == ""){
-			bestname = k
-			bestscore = v.Score
+func getBestFreeScore(nm NodeMap, probtype string) (string, int){
+	bestscore := -1
+	bestname := "NOTFOUND!"
+	kids := getChildren(nm)
+	for _,k := range kids{
+		tmp := nm.Nodes[k]
+		println("TMP: " + tmp.NodeName)
+		println(tmp.HashMetric.Score)
+		println(tmp.PrimeMetric.Score)
+		if tmp.Busy == ""{
+			if probtype == "Hash"{
+				if tmp.HashMetric.Score > bestscore{
+					bestscore = tmp.HashMetric.Score
+					bestname = tmp.NodeName
+				}
+			} else if probtype == "Prime"{
+				if tmp.PrimeMetric.Score > bestscore{
+					bestscore = tmp.PrimeMetric.Score
+					bestname = tmp.NodeName
+				}
+			}
 		}
 	}
 	return bestname, bestscore
 }
 
-func getBusyJob(metrics RepMetrics, nodename string) string{
-	return metrics.Busy[nodename]
+func getBusyJob(nm NodeMap, nodename string) string{
+	return nm.Nodes[nodename].Busy
 }
 
-func setBusy(metrics RepMetrics, nodename string, jid string){
-	metrics.Busy[nodename] = jid
+func setBusy(nm NodeMap, nodename string, jid string){
+	tmp := nm.Nodes[nodename]
+	tmp.Busy = jid
+	nm.Nodes[nodename] = tmp
 }
 
-func setFree(metrics RepMetrics, nodename string){
-	metrics.Busy[nodename] = ""
+func setFree(nm NodeMap, nodename string){
+	tmp := nm.Nodes[nodename]
+	tmp.Busy = ""
+	nm.Nodes[nodename] = tmp
 }
 
 //If a node doesn't currently have a node's nodeinfo, add one
@@ -141,24 +142,18 @@ func getLongestUptime(nm NodeMap) (string,time.Time){
 }
 
 //Scorer should take in the current reputation and the new result and update the reputation as a result
-func updateReputation(repmets map[string]Reputation, newmet metric, node string, scorer func(nm metric, rp Reputation) Reputation) map[string]Reputation{
-	rep, ok := repmets[node]
-	if !ok{
-		return nil
-	}
-	rep = scorer(newmet, rep)
-	repmets[node] = rep
-	return repmets
+func updateReputation(repmets Reputation, newmet metric, node string, scorer func(nm metric, rp Reputation) Reputation) Reputation{
+	return scorer(newmet, repmets)
 }
 
 //The score for hashing is the average time it takes to generate a collision
 //It doesn't use correctness currently
 func hashScorer(met metric, rep Reputation) Reputation{
-	fmt.Println(met.hPerf)
-	fmt.Println("debug")
 	rep.Count += 1
 	newscore := rep.Score / rep.Count
 	newscore += int(met.hPerf)
+	fmt.Print(newscore)
+	fmt.Println(" HASHSCORER debug")
 	newscore = newscore/ rep.Count
 	rep.Score = newscore
 	return rep

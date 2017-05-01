@@ -19,7 +19,8 @@ func processRequestSend(node NodeInfo, self NodeSocket, input string) {
 }
 
 
-func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
+func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input string) {
+	node := nm.Nodes[selfstr]
 	m:= decode(input)
 	var msg string
 	var ms string
@@ -30,21 +31,27 @@ func processRequestReceive(node NodeInfo, self NodeSocket, input string) {
 			num:=big.NewInt(i)
 			metric = testPrime(*num)
 			ms=metricString(metric)
-			nodeinf.RepMets.PrimeMetrics=updateReputation(node.RepMets.PrimeMetrics, metric, node.NodeName, primeScorer)
+			nodeinf.PrimeMetric=updateReputation(nodeinf.PrimeMetric, metric, node.NodeName, primeScorer)
+			metric.NodeInf = nodeinf
 			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
 
 		} else if m.Kind == "Hash" {
 			metric = crackHash(m.Value)
 			ms=hmetricString(metric)
-			nodeinf.RepMets.HashMetrics=updateReputation(node.RepMets.HashMetrics, metric, node.NodeName, hashScorer)
+			//fmt.Println(metric)
+			nodeinf.HashMetric=updateReputation(nodeinf.HashMetric, metric, node.NodeName, hashScorer)
+			metric.NodeInf = nodeinf
 			msg = encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
-
 		}
 
+		nm.Nodes[selfstr] = nodeinf
+
 		fmt.Println("Hash:")
-		fmt.Println(nodeinf.RepMets.HashMetrics[nodeinf.NodeName])
+		fmt.Println(nodeinf.HashMetric)
+		fmt.Println(node.HashMetric)
 		fmt.Println("Prime:")
-		fmt.Println(nodeinf.RepMets.PrimeMetrics[nodeinf.NodeName])
+		fmt.Println(nodeinf.PrimeMetric)
+		fmt.Println(node.PrimeMetric)
 
 		if m.Sender!=m.Receiver{
 			SendResult(self,node,decode(msg))
@@ -70,32 +77,44 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		//reply to master node with the best node
 		//update busy list
 		//master finds the best node
-		bestname, bestscore := getBestFreeScore(node.RepMets, msg.Kind)
-		setBusy(node.RepMets, bestname, msg.Job)
+		bestname, bestscore := getBestFreeScore(nm, msg.Kind)
+		setBusy(nm, bestname, msg.Job)
 		var m metric
+		t,exists := nm.Nodes[bestname]
+		if exists {
+			m.NodeInf = t
+		}
 		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
 		LeadNodeSend(retmsg, selfsoc)
 	} else if msg.Type=="Selected" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		//update busy list
 
-		kids := getChildren(node.RepMets)
+		kids := getChildren(nm)
 		nparr := strings.Split(msg.Input, ";")
 		for _,kid := range kids{
 			for _,np := range nparr{
-				if kid == np && getBusyJob(node.RepMets, np) == msg.Job{
-					setFree(node.RepMets, kid)
+				if kid == np && getBusyJob(nm, np) == msg.Job{
+					setFree(nm, kid)
 				}
 			}
 		}
 
 		nodeSend(m, selfsoc)
 	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
-		setFree(node.RepMets,msg.Sender)
+		setFree(nm,msg.Sender)
+		snodeinfo := msg.Result.NodeInf
 		if msg.Kind == "Prime"{
-			updateReputation(node.RepMets.PrimeMetrics, msg.Result, msg.Sender, primeScorer)
+			snodeinfo.PrimeMetric =  updateReputation(snodeinfo.PrimeMetric, msg.Result, msg.Sender, primeScorer)
 		} else if msg.Kind == "Hash"{
-			updateReputation(node.RepMets.HashMetrics, msg.Result, msg.Sender, hashScorer)
+			snodeinfo.HashMetric = updateReputation(snodeinfo.HashMetric, msg.Result, msg.Sender, hashScorer)
 		}
+		oldni := nm.Nodes[msg.Sender]
+		oldni.HashMetric = snodeinfo.HashMetric
+		oldni.PrimeMetric = snodeinfo.PrimeMetric
+		nm.Nodes[msg.Sender] = oldni
+		fmt.Println(nm.Nodes["bob"].NodeName)
+		fmt.Println(nm.Nodes["bob"].PrimeMetric)
+		fmt.Println(nm.Nodes["bob"].HashMetric)
 	}else if msg.Type=="Connect" {
 		if counter<1{
 			counter++
@@ -141,9 +160,9 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	msg := decode(m)
 	var dummy metric
 	if msg.Type=="Request" {
-		message := encode(msg.Sender, msg.Receiver, "Metric", msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
+		message := encode(msg.Sender, msg.Receiver, msg.Kind, msg.Job, msg.Value, "Metric", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(message, self)
-		bestnode := MasterNodeMet(node, self,message)
+		bestnode := MasterNodeMet(nm, node, self,message)
 
 		//put the best node in msg.Receiver
 		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
@@ -185,13 +204,13 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	}
 }
 
-func MasterNodeMet(node NodeInfo,self NodeSocket, msg string) string {
-	var counter map[string]bool
-	size := len(getChildren(node.RepMets))
+func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) string {
+	counter := make(map[string]bool)
+	size := len(getChildren(nm))
 	c := 0
 	maxRep := -1
 	bestNode := ""
-	for _,child := range getChildren(node.RepMets){
+	for _,child := range getChildren(nm){
 		counter[child] = false
 	}
 	for {
@@ -237,7 +256,7 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	message := fmt.Sprint(s)
 	m:= decode(message)
 	if m.Receiver == selfname {
-		processRequestReceive(selfnode, selfsoc, message)
+		processRequestReceive(nm, selfname, selfsoc, message)
 	}else if  m.Sender == selfname {
 		processRequestSend(selfnode, selfsoc, message)
 

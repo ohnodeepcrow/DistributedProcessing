@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+var nm NodeMap
+
 func setup_window(title string) *gtk.Window {
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
 	if err != nil {
@@ -363,8 +365,8 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 		//fmt.Println(text)
 	})
 	btn1 := setup_btn("Train Network with test data", func() {
-			trainPrime(nodesoc, nodeinf)
-			trainHash(nodesoc, nodeinf)
+			trainPrime(nm, nodesoc, nodeinf)
+			trainHash(nm, nodesoc, nodeinf)
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
 	})
@@ -380,7 +382,8 @@ var (
 )
 
 
-func startUI(self NodeSocket, nodeinfo NodeInfo) {
+func startUI(n NodeMap, self NodeSocket, nodeinfo NodeInfo) {
+	nm = n
 	nodesoc=self
 	nodeinf=nodeinfo
 

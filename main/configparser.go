@@ -26,7 +26,9 @@ type NodeInfo struct {
 	Effort 		string
 	DataRecvPort 	string
 	DataSendPort	string
-	RepMets		RepMetrics
+	HashMetric 	Reputation
+	PrimeMetric 	Reputation
+	Busy 		string
 	Uptime		time.Time
 	Leader		bool
 	Master		bool

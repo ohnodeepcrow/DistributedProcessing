@@ -38,11 +38,11 @@ func verifyPrime(num big.Int) bool{
 	return isPrime
 }
 
-func trainPrime(self NodeSocket,nodeinfo NodeInfo){
+func trainPrime(nm NodeMap, self NodeSocket,nodeinfo NodeInfo){
 	for i:=0;i<10 ;i++  {
 		var m metric
 		msg := encode(nodeinfo.NodeName, nodeinfo.NodeName,"Prime",generateCandidate().String(),getCurrentTimestamp(), "Selected",nodeinfo.NodeGroup,"","","",m,"")
 
-		processRequestReceive(nodeinfo, self ,msg )
+		processRequestReceive(nm, nodeinfo.NodeName, self ,msg )
 	}
 }

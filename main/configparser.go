@@ -29,7 +29,9 @@ type NodeInfo struct {
 	RepMets		RepMetrics
 	Uptime		time.Time
 	Leader		bool
+	Master		bool
 }
+
 
 // Reads info from config file
 func ReadConfig(configfile string) Configs {

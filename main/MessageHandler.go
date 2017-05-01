@@ -101,13 +101,12 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			counter++
 			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 			dummy.NodeInf=nm.Nodes[node.NodeName]
-			println(dummy.NodeInf.NodeName)
 			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
 			selfsoc.datasendsock.Send(retmsg,0)
 
 		}else {
-		retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
-		selfsoc.datasendsock.Send(retmsg,0)
+			retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
+			selfsoc.datasendsock.Send(retmsg,0)
 		}
 
 	}else if msg.Type=="Hi" {
@@ -152,7 +151,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	} else if msg.Type=="Hi" {
 		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 		for k,v := range nm.Nodes{
-			if v.Leader==false{
+			if v.Leader==false && v.Master == false{
 				var dummy metric
 				dummy.NodeInf = v
 				up := encode(k, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
@@ -245,7 +244,7 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 			LeadNodeRec(selfname, nm, selfsoc, message)
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)
-	}else if m.Kind == "UpdateUptime"{
+	}else if m.Type == "UpdateUptime"{
 		updateNodeInfo(nm, m.Sender, m.Result.NodeInf)
 	}else {
 		return //drop message

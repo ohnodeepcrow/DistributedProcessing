@@ -243,13 +243,13 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 					LeaderAddr := msg.Address
 					LeaderPort := msg.Port
 
-					soc,_ := context.NewSocket(zmq4.REQ)
+					soc2,_ := context.NewSocket(zmq4.REQ)
 					socstr := "tcp://" + LeaderAddr + ":" + LeaderPort
-					soc.Connect(socstr)
+					soc2.Connect(socstr)
 					m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Connect","","","","",dummy,"")
-					soc.Send(m,0)
+					soc2.Send(m,0)
 					for{
-						temp,_ := soc.Recv(zmq4.DONTWAIT)
+						temp,_ := soc2.Recv(zmq4.DONTWAIT)
 						if(temp == ""){
 							continue
 						}
@@ -261,13 +261,14 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 							return ns
 
 						}else if m.Type=="Rejected"{
-
+							println("broken!")
+							break
 						}
 					}
 
 				}
 			}
-		time.Sleep(time.Millisecond*50)
+			time.Sleep(time.Millisecond*50)
 		}
 	}
 }

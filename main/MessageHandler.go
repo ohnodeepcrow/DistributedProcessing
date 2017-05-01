@@ -175,11 +175,13 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 			if (leader != node.NodeName){
 				msg := encode(leader,"","","","","Leader","","",nodeinfo.NodeAddr,nodeinfo.DataSendPort,dummy,"")
 				self.datasendsock.Send(msg,0)
+				//Req/Rep needs to send/receive
+				//This means we need 1 send and 1 recv before the next send
+				self.datasendsock.Recv(0)
 			}
 		}
-		msg := encode(leader,"","","","","Leader","","","","",dummy,"")
-		self.datasendsock.Send(msg,0)
-
+		endmsg := encode(leader,"","","","","Leader","","","","",dummy,"")
+		self.datasendsock.Send(endmsg,0)
 	}
 }
 

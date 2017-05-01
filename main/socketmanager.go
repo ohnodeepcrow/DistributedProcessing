@@ -222,8 +222,22 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 	socstr := "tcp://" + MasterAddr + ":" + MasterPort
 	soc.Connect(socstr)
 	soc.Send(m1,0)
+
+	mlist := make([]string, 10, 10)
 	for {
-		tmp,_ := soc.Recv(zmq4.DONTWAIT)
+		tmp, _ := soc.Recv(zmq4.DONTWAIT)
+		if (tmp != "") {
+			tmsg := decode(tmp)
+			mlist = append(mlist, tmp)
+			if(tmsg.Address == "") && (tmsg.Port == ""){
+				soc.Disconnect(socstr)
+				soc.Close()
+				break
+			}
+			soc.Send("",0)
+		}
+	}
+	for _,tmp := range mlist{
 		if (tmp != ""){
 			fmt.Print("Received from data soc: "+tmp + "\n")
 
@@ -261,7 +275,6 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 							return ns
 
 						}else if m.Type=="Rejected"{
-							println("broken!")
 							break
 						}
 					}
@@ -271,4 +284,5 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 			time.Sleep(time.Millisecond*50)
 		}
 	}
+	panic("SHOULD NEVER REACH THIS POINT!")
 }

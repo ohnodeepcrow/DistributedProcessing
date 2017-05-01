@@ -130,7 +130,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 
 	}else if msg.Type=="Hi" {
 			for k,v := range nm.Nodes {
-				if v.Leader == false {
+				if v.Leader == false && v.Master == false{
 					var dummy metric
 					dummy.NodeInf = v
 					up := encode(k, "", "", "", "", "UpdateUptime", "", "", "", "", dummy, "")
@@ -170,7 +170,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	} else if msg.Type=="Hi" {
 		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 		for k,v := range nm.Nodes{
-			if v.Leader==false && v.Master == false{
+			if v.Leader==true && v.Master == false{
 				var dummy metric
 				dummy.NodeInf = v
 				up := encode(k, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")

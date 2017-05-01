@@ -101,7 +101,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			counter++
 			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 			dummy.NodeInf=nm.Nodes[node.NodeName]
-
+			println(dummy.NodeInf.NodeName)
 			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
 			selfsoc.datasendsock.Send(retmsg,0)
 

@@ -245,6 +245,9 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 					soc.Send(m,0)
 					for{
 						temp,_ := soc.Recv(zmq4.DONTWAIT)
+						if(temp == ""){
+							continue
+						}
 						m:=decode(temp)
 						if m.Type=="Accepted"{
 							ns := establishMember(context, self, m.Result.NodeInf)
@@ -266,9 +269,8 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 					}
 
 				}
-		}
+			}
 		time.Sleep(time.Millisecond*50)
+		}
 	}
-
-
-}}
+}

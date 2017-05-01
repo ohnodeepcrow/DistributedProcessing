@@ -28,6 +28,7 @@ type NodeInfo struct {
 	DataSendPort	string
 	RepMets		RepMetrics
 	Uptime		time.Time
+	Leader		bool
 }
 
 // Reads info from config file

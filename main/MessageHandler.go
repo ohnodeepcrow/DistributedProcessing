@@ -163,12 +163,12 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		message := encode(msg.Sender, msg.Receiver, msg.Kind, msg.Job, msg.Value, "Metric", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(message, self)
 		bestnode := MasterNodeMet(nm, node, self,message)
-		//TODO: Fill out the reply message in a useful way
-		//TODO: WE NEED A SPECIAL MESSAGE TYPE FOR THIS... CAN'T USE METRIC
-
-		//put the best node in msg.Receiver
-		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
-		LeadNodeSend(m, self)
+		fmt.Println("BESTNODE: " + bestnode)
+		//Need to fill the dummy metric out with info about the best node
+		dummy.NodeInf = nm.Nodes[bestnode]
+		//put the best node name in msg.Receiver, and the NodeInfo in metric
+		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, "Selected", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
+		nodeSend(m, self)
 	} else if msg.Type=="Hi" {
 		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 		for k,v := range nm.Nodes{
@@ -176,7 +176,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 				var dummy metric
 				dummy.NodeInf = v
 				up := encode(k, "", "", "","", "UpdateUptime", "","", "", "", dummy,"")
-				LeadNodeSend(up,self)
+				nodeSend(up,self)
 			}
 		}
 

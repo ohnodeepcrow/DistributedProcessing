@@ -249,6 +249,8 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 
 				if msg.Address =="" && msg.Port==""{
 					ns := establishLeader(context,self,master)
+					dummy.NodeInf = self
+					dummy.NodeInf.Leader = true
 					m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
 					LeadNodeSend(m,ns)
 					return ns

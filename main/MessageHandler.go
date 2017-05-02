@@ -163,6 +163,8 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		message := encode(msg.Sender, msg.Receiver, msg.Kind, msg.Job, msg.Value, "Metric", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(message, self)
 		bestnode := MasterNodeMet(nm, node, self,message)
+		//TODO: Fill out the reply message in a useful way
+		//TODO: WE NEED A SPECIAL MESSAGE TYPE FOR THIS... CAN'T USE METRIC
 
 		//put the best node in msg.Receiver
 		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, msg.Type, msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
@@ -206,7 +208,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 
 func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) string {
 	counter := make(map[string]bool)
-	size := len(getChildren(nm))
+	size := len(getChildren(nm)) - 1
 	c := 0
 	maxRep := -1
 	bestNode := ""
@@ -227,10 +229,10 @@ func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) string
 					if (a > maxRep){
 						bestNode = m.Receiver
 						maxRep = a
-						c = c + 1
-						if (c==size){
-							return bestNode
-						}
+					}
+					c = c + 1
+					if (c==size){
+						return bestNode
 					}
 
 

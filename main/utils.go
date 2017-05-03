@@ -37,3 +37,29 @@ func hmetricString (m metric) string{
 	c:="Preimage: "+a+"\n"+"Performance Hit: "+b
 	return c
 }
+
+//takes in a list of strings
+//outputs that list with no duplicates as a semicolon-delimited string
+func stringulate(inlist []string) string{
+	//fmt.Print("STRINGULATE: ")
+	//fmt.Println(inlist)
+	size := len(inlist)
+	ret := ""
+	for i:=0; i < size; i++{
+		dup := false
+		for j := i+1; j < size; j++{
+			if inlist[i] == inlist[j]{
+				dup = true
+				break
+			}
+		}
+		if !dup && inlist[i] != ""{
+			if ret == ""{
+				ret = inlist[i]
+			} else {
+				ret = ret + ";" + inlist[i]
+			}
+		}
+	}
+	return ret
+}

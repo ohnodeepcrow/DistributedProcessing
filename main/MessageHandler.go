@@ -215,6 +215,7 @@ func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (strin
 	maxRep := -1
 	bestNode := ""
 	notpicked := ""
+	nplist := make([]string, size+1, size+1)
 	for _,child := range getChildren(nm){
 		counter[child] = false
 	}
@@ -230,16 +231,17 @@ func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (strin
 					counter[m.Sender]=true
 					a,_ := strconv.Atoi(m.Value)
 					if (a > maxRep){
-						if(notpicked == ""){
-							notpicked = m.Receiver
-						} else {
-							notpicked = notpicked + ";" + m.Receiver
+						if(bestNode != "") {
+							nplist = append(nplist, bestNode)
 						}
 						bestNode = m.Receiver
 						maxRep = a
+					} else {
+						nplist = append(nplist, m.Receiver)
 					}
 					c = c + 1
 					if (c==size){
+						notpicked = stringulate(nplist)
 						return bestNode, notpicked
 					}
 

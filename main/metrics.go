@@ -4,7 +4,6 @@ import (
 	"time"
 	"strconv"
 	"math/big"
-	"fmt"
 )
 
 type metric struct {

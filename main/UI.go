@@ -168,6 +168,7 @@ func preImage(c1 string) gtk.IWidget {
 					log.Fatal("IdleAdd() failed:", err)
 				}
 				var dummy metric
+				dummy.NodeInf = nodeinf
 				msg := encode(nodeinf.NodeName, "leader", "Hash",getCurrentTimestamp(),hash,"Request","","","","",dummy,hash)
 				nodeSend(string(msg), nodesoc)
 
@@ -191,6 +192,9 @@ func preImage(c1 string) gtk.IWidget {
 			for n :=  ml.Front(); n != nil ; n = n.Next(){
 				test := n.Value.(Message)
 
+				if(test.Type != "Reply"){
+					break
+				}
 				str+="Input: "
 				str+=test.Input
 				str+="\n"
@@ -269,6 +273,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 				log.Fatal("IdleAdd() failed:", err)
 			}
 			var dummy metric
+			dummy.NodeInf = nodeinf
 			msg := encode(nodeinf.NodeName, "", "Prime",getCurrentTimestamp(),isPrime,"Request","","","","",dummy,isPrime)
 			nodeSend(string(msg), nodesoc)
 
@@ -293,6 +298,9 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 				test := n.Value.(Message)
 
 				//fmt.Println("====Results====")
+				if(test.Type != "Reply"){
+					break
+				}
 
 				str+="Input: "
 				str+=test.Input

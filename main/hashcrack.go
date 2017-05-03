@@ -100,7 +100,7 @@ func generateHash ()string{
 func trainHash(nm NodeMap, self NodeSocket,nodeinfo NodeInfo){
 	for i:=0;i<10 ;i++  {
 		var m metric
-		msg := encode(nodeinfo.NodeName, nodeinfo.NodeName,"Hash",generateHash(),getCurrentTimestamp(), "Selected",nodeinfo.NodeGroup,"","","",m,"")
+		msg := encode(nodeinfo.NodeName, nodeinfo.NodeName,"Hash",generateHash(),getCurrentTimestamp(), "Train",nodeinfo.NodeGroup,"","","",m,"")
 
 		processRequestReceive(nm, nodeinfo.NodeName, self ,msg )
 	}

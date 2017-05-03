@@ -25,7 +25,7 @@ func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input st
 	var msg string
 	var ms string
 	var metric metric
-	if m.Type=="Selected"{
+	if m.Type=="Selected" || m.Type == "Train"{
 		//TODO: Actually process request/response portion --> need to make node 2 node connection
 		if m.Kind == "Prime" {
 			i,_:= strconv.ParseInt(m.Value,10,64)
@@ -56,6 +56,8 @@ func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input st
 
 		if m.Sender!=m.Receiver{
 			SendResult(self,node,decode(msg))
+		} else if m.Type == "Selected"{
+			MQpush(self.dataq, decode(msg))
 		}
 		updatemsg := encode(node.NodeName, "",m.Kind, ms, m.Job,"Update",node.NodeGroup,"","","",metric,"")
 		nodeSend(updatemsg, self)
@@ -87,7 +89,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		}
 		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
 		LeadNodeSend(retmsg, selfsoc)
-	} else if msg.Type=="Selected" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
+	} else if (msg.Type=="Selected" || msg.Type == "Train") && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		//update busy list
 		//TODO: Ensure we only pass message on if we're the leader of one of the nodes (requester or requestee)
 		kids := getChildren(nm)
@@ -99,7 +101,6 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 				}
 			}
 		}
-
 		nodeSend(m, selfsoc)
 	}else if msg.Type=="Update" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		setFree(nm,msg.Sender)
@@ -164,12 +165,12 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		message := encode(msg.Sender, msg.Receiver, msg.Kind, msg.Job, msg.Value, "Metric", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, msg.Value)
 		nodeSend(message, self)
 		bestnode, notpicked := MasterNodeMet(nm, node, self,message)
-		fmt.Println("BESTNODE: " + bestnode)
+		fmt.Println("BESTNODE: " + bestnode.NodeName)
 		fmt.Println("NOTPICKED: " + notpicked)
 		//Need to fill the dummy metric out with info about the best node
-		dummy.NodeInf = nm.Nodes[bestnode]
+		dummy.NodeInf = msg.Result.NodeInf
 		//put the best node name in msg.Receiver, and the NodeInfo in metric
-		m := encode(msg.Sender, bestnode, msg.Kind, msg.Job, msg.Value, "Selected", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, notpicked)
+		m := encode(msg.Sender, bestnode.NodeName, msg.Kind, msg.Job, msg.Value, "Selected", msg.SenderGroup, msg.ReceiverGroup, msg.Address, msg.Port, dummy, notpicked)
 		nodeSend(m, self)
 	} else if msg.Type=="Hi" {
 		updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
@@ -208,12 +209,13 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	}
 }
 
-func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (string,string) {
+func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (NodeInfo,string) {
 	counter := make(map[string]bool)
 	size := len(getChildren(nm)) - 1
 	c := 0
 	maxRep := -1
-	bestNode := ""
+	var bestNode NodeInfo
+	bestNode.NodeName = ""
 	notpicked := ""
 	nplist := make([]string, size+1, size+1)
 	for _,child := range getChildren(nm){
@@ -231,10 +233,10 @@ func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (strin
 					counter[m.Sender]=true
 					a,_ := strconv.Atoi(m.Value)
 					if (a > maxRep){
-						if(bestNode != "") {
-							nplist = append(nplist, bestNode)
+						if(bestNode.NodeName != "") {
+							nplist = append(nplist, bestNode.NodeName)
 						}
-						bestNode = m.Receiver
+						bestNode = m.Result.NodeInf
 						maxRep = a
 					} else {
 						nplist = append(nplist, m.Receiver)
@@ -253,7 +255,7 @@ func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (strin
 			}
 		}
 	}
-	return "",notpicked
+	return bestNode,notpicked
 }
 
 
@@ -267,9 +269,9 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	}
 	message := fmt.Sprint(s)
 	m:= decode(message)
-	if m.Receiver == selfname {
+	if m.Receiver == selfname && m.Type == "Selected"{
 		processRequestReceive(nm, selfname, selfsoc, message)
-	}else if  m.Sender == selfname {
+	}else if  m.Sender == selfname && m.Type == "Selected"{
 		processRequestSend(selfnode, selfsoc, message)
 
 	} else if selfsoc.leader == true {
@@ -293,8 +295,8 @@ func startMessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 }
 
 func ReceiveResult(self NodeSocket,msg Message){
-	addr:=msg.Address
-	port:=msg.Port
+	addr := msg.Result.NodeInf.NodeAddr
+	port := msg.Result.NodeInf.DataSendPort
 	soc :=establishClient(addr,port)
 	soc.Send("req",0)
 	for {
@@ -315,19 +317,10 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 	addr:=node.NodeAddr
 	port:=node.DataSendPort
 	send_sock:= establishServer(addr,port)
-	t,_ :=(send_sock.GetIdentity())
-	fmt.Print(t +"\n")
-	i,_:= strconv.ParseInt(m.Value,10,64)
-	num:=big.NewInt(i)
-	metric := testPrime(*num)
-	ms:=metricString(metric)
-	msg := encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
-	fmt.Print(string(msg)+ "\n")
+	msg := encode(m.Sender, m.Receiver,m.Kind,m.Job,m.Value,m.Type,m.ReceiverGroup,m.SenderGroup,m.Address,m.Port,m.Result,m.Value)
 	for {
 		signal,_ := send_sock.Recv(zmq4.DONTWAIT)
 		if (signal != ""){
-			//send the result back through data socket.
-			fmt.Print(signal+"\n")
 			send_sock.Send(msg,0)
 			return
 		}

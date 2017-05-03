@@ -78,9 +78,9 @@ func getBestFreeScore(nm NodeMap, probtype string) (string, int){
 	kids := getChildren(nm)
 	for _,k := range kids{
 		tmp := nm.Nodes[k]
-		println("TMP: " + tmp.NodeName)
-		println(tmp.HashMetric.Score)
-		println(tmp.PrimeMetric.Score)
+		//println("TMP: " + tmp.NodeName)
+		//println(tmp.HashMetric.Score)
+		//println(tmp.PrimeMetric.Score)
 		if tmp.Busy == ""{
 			if probtype == "Hash"{
 				if tmp.HashMetric.Score > bestscore{
@@ -152,8 +152,8 @@ func hashScorer(met metric, rep Reputation) Reputation{
 	rep.Count += 1
 	newscore := rep.Score / rep.Count
 	newscore += int(met.hPerf)
-	fmt.Print(newscore)
-	fmt.Println(" HASHSCORER debug")
+	//fmt.Print(newscore)
+	//fmt.Println(" HASHSCORER debug")
 	newscore = newscore/ rep.Count
 	rep.Score = newscore
 	return rep

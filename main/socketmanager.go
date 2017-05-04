@@ -97,7 +97,6 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	ret.master = true
 	ret.sendsock = ssoc
 	ret.recvsock = rsoc
-	Board=newMasterBoard(self)
 	ret.recvq = newMutexQueue()
 	ret.sendq = newMutexQueue()
 	ret.lsendq = newMutexQueue()

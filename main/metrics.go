@@ -21,7 +21,8 @@ type Reputation struct {
 }
 
 
-var Board map[string]int
+var BoardH map[string]int
+var BoardP map[string]int
 
 
 //Map that maps node names to the first time that node was seen
@@ -194,12 +195,15 @@ func primeScorer(met metric, rep Reputation) Reputation{
 
 func getRepBoard(self NodeSocket,nodeinf NodeInfo) {
 	var dummy metric;
-	msg := encode(nodeinf.NodeName, "", "","","","Board","","","","",dummy,0)
+
+	m := encode(nodeinf.NodeName, "", "","","","Board","","","","",dummy,"")
 	if(nodeinf.Leader==true && nodeinf.Master==false){
-		LeadNodeSend(msg,self)
+
+		LeadNodeSend(m,self)
 	}else if(nodeinf.Master==true && nodeinf.Leader==true){
 
 	}else{
-		nodeSend(msg,self)
+
+		nodeSend(m,self)
 	}
 }

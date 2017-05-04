@@ -71,16 +71,21 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	msg:=decode(m)
 	var dummy metric
 	var r map[string]int
+	var r1 map[string]int
 
 	if (msg.Type =="Request" || msg.Type=="Board") && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
 	}else if (msg.Type=="BoardReply")  {
 		nodeSend(m, selfsoc) // group node forwards the request to master node
-	}else if(msg.Type=="BoardRequest" && msg.Type=="Prime" )  {
+	}else if(msg.Type=="BoardLeader"  )  {
 		for _,child := range getChildren(nm){
 			r[child]=nm.Nodes[child].PrimeMetric.Score
+			r1[child]=nm.Nodes[child].HashMetric.Score
 		}
-		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
+		s:=encodeRep(r)
+		s1:=encodeRep(r1)
+		var m metric
+		retmsg := encode(node.NodeName,"", msg.Kind, msg.Job,s, "BoardRequest", s1,"", "", node.DataSendPort, m,"")
 		LeadNodeSend(retmsg, selfsoc)
 	}else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
 
@@ -161,7 +166,6 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	}
 }
 
-}
 
 /*Master node will call this function after it received a message from a node. It will use send to retransmit the node. */
 func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
@@ -217,13 +221,15 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 	}else if msg.Type=="Board"{
 		c:=0
 		counter := make(map[string]bool)
-		bo := encode("Master","","","",encodeRep(Board),"BoardLeader","","","","",dummy,"")
+		fmt.Print("##\n")
+		bo := encode("Master","","","","","BoardLeader","","","","",dummy,"")
 		LeadNodeSend(bo,self)
 		size := len(getLeaders(nm)) - 1
 		for _,child := range getLeaders(nm){
 			counter[child] = false
 		}
 		var a map[string]int
+		var a1 map[string]int
 		for {
 			s := MQpop(self.recvq)
 				if s != nil {
@@ -233,19 +239,26 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 
 							counter[m.Sender]=true
 							a = decodeRep(m.Value)
+							a1 = decodeRep(m.Value)
 							for k, v := range a {
-								Board[k] = v
+								BoardH[k] = v
+							}
+							for k, v := range a1 {
+								BoardP[k] = v
 							}
 							c++
 							if (c==size){
-								bo := encode("Master","","","",encodeRep(Board),"BoardReply","","","","",dummy,"")
+								bo := encode("Master","","","",encodeRep(a1),"BoardReply",encodeRep(a),"","","",dummy,"")
 								LeadNodeSend(bo,self)
 							}
 
+					}else  {
+						MQpush(self.recvq, s)
 					}
 
 				}
-			}
+
+		}
 		}
 
 }

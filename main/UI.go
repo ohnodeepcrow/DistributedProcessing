@@ -8,9 +8,8 @@ import (
 	"github.com/gotk3/gotk3/glib"
 	"bufio"
 	"os"
+	"time"
 )
-
-var nm NodeMap
 
 func setup_window(title string) *gtk.Window {
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
@@ -101,7 +100,7 @@ func newStackFull() gtk.IWidget {
 	// Fill the stack with 3 pages.
 	boxText1 := isPrime("isPrime", "Candidate Int64")
 	boxText2 := preImage("Candidate Hash")
-	boxText3 := repTable("Rank","Node", "Primality Score","Pre-Image Score")
+	boxText3 := repTable("Node","Primality Score", "Hash Score")
 
 	stack.AddTitled(boxText1, "key1", "Primality Test")
 	stack.AddTitled(boxText2, "key2", "Pre-Image Test")
@@ -184,7 +183,7 @@ func preImage(c1 string) gtk.IWidget {
 			log.Fatal("IdleAdd() failed:", err)
 		}
 		ml := MQpop(nodesoc.dataq)
-		for ;ml != nil;{
+		for i := 0;ml != nil && i < 10;i++{
 
 			if ml == nil {
 				str += ""
@@ -193,6 +192,7 @@ func preImage(c1 string) gtk.IWidget {
 
 			//fmt.Println("====Results====")
 			if (test.Type != "Reply") {
+				MQpush(nodesoc.dataq, ml)
 				continue
 			}
 
@@ -291,7 +291,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 			log.Fatal("IdleAdd() failed:", err)
 		}
 		ml := MQpop(nodesoc.dataq)
-		for ;ml != nil;{
+		for i := 0;ml != nil && i < 10;i++{
 
 			if ml == nil {
 				str += ""
@@ -300,6 +300,7 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 
 			//fmt.Println("====Results====")
 			if (test.Type != "Reply") {
+				MQpush(nodesoc.dataq, ml)
 				continue
 			}
 
@@ -338,54 +339,70 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 
 }
 
-func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
+func repTable(c1 string, c2 string, c3 string) gtk.IWidget {
 	box := setup_box(gtk.ORIENTATION_VERTICAL)
-	treeView, listStore := setupTreeView3(c1,c2,c3)
+	listStore,_ := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING)
+	listStore1,_ := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING)
+	treeView, listStore := setupTreeView3(c1, c2)
 	sw, _ := gtk.ScrolledWindowNew(nil, nil)
-	sw.Add(treeView)
+	if nodeinf.Master {
+		sw.Add(treeView)
+	}
 	box.PackStart(sw, true, true, 10)
 
-	treeView1, listStore1 := setupTreeView3(c1,c2,c4)
+	treeView1, listStore1 := setupTreeView3(c1,c3)
 	sw1, _ := gtk.ScrolledWindowNew(nil, nil)
-	sw1.Add(treeView1)
+	if nodeinf.Master {
+		sw1.Add(treeView1)
+	}
 	box.PackStart(sw1, true, true, 10)
 
-	var me map[string]int
 	// Add some rows to the list store
 
+	if nodeinf.Master {
+		btn := setup_btn("Refresh", func() {
 
-	btn := setup_btn("Refresh", func() {
-		//text := get_text_from_tview(treeView)
-		//fmt.Println(text)
-		getRepBoard(nodesoc,nodeinf)
-		for {
-			s := MQpop(nodesoc.recvq)
-			if s != nil {
-				message := fmt.Sprint(s)
-				m := decode(message)
-				if m.Type == "BoardRequest" {
-					me = decodeRep(m.Value)
-					for k, v := range me {
-						addRow3(listStore, k, strconv.Itoa(v), "")
-					}
-					e := decodeRep(m.Value)
-					for k, v := range e {
-						addRow3(listStore1, k, strconv.Itoa(v), "")
-					}
-				}else{
-					MQpush(nodesoc.recvq,s)
-
+			//text := get_text_from_tview(treeView)
+			//fmt.Println(text)
+			var m metric
+			msg := encode(nodeinf.NodeName, nodeinf.NodeName,"Prime",generateCandidate().String(),getCurrentTimestamp(), "Refresh",nodeinf.NodeGroup,"","","",m,"")
+			MQpush(nodesoc.recvq,msg)
+			var me map[string]int
+			var mp map[string]int
+			for {
+				mstr := MQpop(nodesoc.dataq)
+				if mstr == nil{
+					time.Sleep(time.Millisecond*5)
+					continue
+				}
+				msg := decode(mstr.(string))
+				fmt.Println("UI MSG: " + mstr.(string))
+				if msg.Type != "UIBoard"{
+					MQpush(nodesoc.dataq, mstr)
+					time.Sleep(time.Millisecond*5)
+					continue
+				}
+				me = decodeRep(msg.Input)
+				mp = decodeRep(msg.Value)
+				break
 			}
-		}
+			for k, v := range me {
+				addRow2(listStore, k, strconv.Itoa(v))
+			}
+			fmt.Println(me)
+			for k, v := range mp {
+				addRow2(listStore1, k, strconv.Itoa(v))
+			}
+			fmt.Println(mp)
+		})
+		box.Add(btn)
 	}
-	})
 	btn1 := setup_btn("Train Network with test data", func() {
 			trainPrime(nodesoc, nodeinf)
 			trainHash(nodesoc, nodeinf)
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
 	})
-	box.Add(btn)
 	box.Add(btn1)
 	return box
 }

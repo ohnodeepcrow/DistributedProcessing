@@ -4,6 +4,7 @@ import (
 	"time"
 	"strconv"
 	"math/big"
+	"fmt"
 )
 
 type metric struct {
@@ -19,11 +20,6 @@ type Reputation struct {
 	Count		int
 	Correct 	int
 }
-
-
-var BoardH map[string]int
-var BoardP map[string]int
-
 
 //Map that maps node names to the first time that node was seen
 type NodeMap struct{
@@ -74,7 +70,7 @@ func newRepMetrics() (Reputation, Reputation, string){
 }
 
 func getChildren(nm NodeMap) []string{
-	keys := make([]string, len(nm.Nodes))
+	keys := make([]string, 0, len(nm.Nodes))
 	for k,v := range nm.Nodes {
 		if (!v.Leader) && (!v.Master){
 			keys = append(keys, k)
@@ -84,9 +80,9 @@ func getChildren(nm NodeMap) []string{
 }
 
 func getLeaders(nm NodeMap) []string{
-	keys := make([]string, len(nm.Nodes))
+	keys := make([]string, 0, len(nm.Nodes))
 	for k,v := range nm.Nodes {
-		if (v.Leader) && (!v.Master){
+		if (!v.Master){
 			keys = append(keys, k)
 		}
 	}
@@ -193,17 +189,56 @@ func primeScorer(met metric, rep Reputation) Reputation{
 	return rep
 }
 
-func getRepBoard(self NodeSocket,nodeinf NodeInfo) {
-	var dummy metric;
+func getRepBoard(self NodeSocket,nodeinf NodeInfo, nm NodeMap) (map[string]int, map[string]int){
+	var dummy metric
+	c:=0
+	bo := encode("Master","","Prime","","","BoardLeader","","","","",dummy,"")
+	nodeSend(bo,self)
+	size := len(getLeaders(nm))
 
-	m := encode(nodeinf.NodeName, "", "Prime","","","Board","","","","",dummy,"")
-	if(nodeinf.Leader==true && nodeinf.Master==false){
+	fmt.Print("SIZE: ")
+	fmt.Println(size)
 
-		LeadNodeSend(m,self)
-	}else if(nodeinf.Master==true && nodeinf.Leader==true){
+	fmt.Print("LEADERS: ")
+	fmt.Println(getLeaders(nm))
 
-	}else{
+	var a map[string]int
+	var a1 map[string]int
+	a = make(map[string]int)
+	a1 = make(map[string]int)
 
-		nodeSend(m,self)
+	var BoardH map[string]int
+	var BoardP map[string]int
+
+	BoardH = make(map[string]int)
+	BoardP = make(map[string]int)
+
+	for {
+		s := MQpop(self.recvq)
+		if s != nil {
+			message := fmt.Sprint(s)
+			m := decode(message)
+			if m.Type == "BoardReply" {
+				a = decodeRep(m.Value)
+				a1 = decodeRep(m.SenderGroup)
+				for k, v := range a {
+					BoardH[k] = v
+				}
+				for k, v := range a1 {
+					BoardP[k] = v
+				}
+				c++
+				if (c>=size){
+					fmt.Println("BREAKING")
+					break
+				}
+
+			}else  {
+				MQpush(self.recvq, s)
+			}
+
+		}
+
 	}
+	return BoardP,BoardH
 }

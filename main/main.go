@@ -64,18 +64,24 @@ func main(){
 	if(ns.leader){
 		tmp := myNodeMap.Nodes[self.NodeName]
 		tmp.Leader = true
+		self.Leader = true
 		myNodeMap.Nodes[self.NodeName] = tmp
 	}
 	if(ns.master){
 		tmp := myNodeMap.Nodes[self.NodeName]
 		tmp.Master = true
+		self.Master = true
 		myNodeMap.Nodes[self.NodeName] = tmp
 	}
 	go startReceiver(ns)
 	go startSender(ns)
 	go startMessageHandler(self.NodeName, myNodeMap, ns)
 	//go startIO(cntxt, ns, self)
+<<<<<<< HEAD
 	go startUI(myNodeMap, ns, self)
+=======
+	go startUI(ns, self)
+>>>>>>> WORKING_1
 	startHeartbeatService(self.NodeName, ns)
 	wg.Wait()
 }

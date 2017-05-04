@@ -267,18 +267,20 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	}
 	message := fmt.Sprint(s)
 	m:= decode(message)
-	if m.Receiver == selfname && m.Type == "Selected"{
+	if m.Type == "TimeoutDetected"{
+		HandleTimeout(nm, m.Sender, selfsoc, m.Value)
+	} else if m.Receiver == selfname && m.Type == "Selected"{
 		processRequestReceive(nm, selfname, selfsoc, message)
 	} else if m.Receiver == selfname && m.Type == "Reply"{
 		processRequestSend(nm.Nodes[selfname], selfsoc, message)
 	} else if selfsoc.leader == true {
-			//println("Retransmitting " + message)
-			LeadNodeRec(selfname, nm, selfsoc, message)
+		//println("Retransmitting " + message)
+		LeadNodeRec(selfname, nm, selfsoc, message)
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)
 	}else if m.Type == "UpdateUptime"{
 		updateNodeInfo(nm, m.Sender, m.Result.NodeInf)
-	}else {
+	}else{
 		return //drop message
 	}
 }

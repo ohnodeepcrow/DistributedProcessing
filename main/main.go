@@ -26,6 +26,7 @@ func main(){
 	self := getNodeInfo(selfstr, configs)
 	// currently we are assigning leader with their peer manually, need to figure out a better way to connect the peers.
 	master := getNodeInfo("master", configs)
+	master.Master = true
 	fmt.Println("Running as "+self.NodeName)
 	fmt.Println("IP: " + self.NodeAddr)
 	fmt.Println("Port1: " + self.SendPort)

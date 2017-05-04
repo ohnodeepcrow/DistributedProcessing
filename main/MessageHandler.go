@@ -70,11 +70,20 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg:=decode(m)
 	var dummy metric
+	var r map[string]int
 
 	if (msg.Type =="Request" || msg.Type=="Board") && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
-	} else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
-		
+	}else if (msg.Type=="BoardReply")  {
+		nodeSend(m, selfsoc) // group node forwards the request to master node
+	}else if(msg.Type=="BoardRequest" && msg.Type=="Prime" )  {
+		for _,child := range getChildren(nm){
+			r[child]=nm.Nodes[child].PrimeMetric.Score
+		}
+		retmsg := encode(node.NodeName, bestname, msg.Kind, msg.Job,strconv.Itoa(bestscore), "Metric", node.NodeGroup,"", node.NodeAddr, node.DataSendPort, m,"")
+		LeadNodeSend(retmsg, selfsoc)
+	}else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
+
 		//reply to master node with the best node
 		//update busy list
 		//master finds the best node
@@ -129,16 +138,16 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		}
 
 	}else if msg.Type=="Hi" {
-			for k,v := range nm.Nodes {
-				if v.Leader == false && v.Master == false{
-					var dummy metric
-					dummy.NodeInf = v
-					up := encode(k, "", "", "", "", "UpdateUptime", "", "", "", "", dummy, "")
-					nodeSend(up,selfsoc)
-				}
-			}
-				up := encode("", "", "", "", "", "End", "", "", "", "", dummy, "")
+		for k,v := range nm.Nodes {
+			if v.Leader == false && v.Master == false{
+				var dummy metric
+				dummy.NodeInf = v
+				up := encode(k, "", "", "", "", "UpdateUptime", "", "", "", "", dummy, "")
 				nodeSend(up,selfsoc)
+			}
+		}
+		up := encode("", "", "", "", "", "End", "", "", "", "", dummy, "")
+		nodeSend(up,selfsoc)
 
 	}else if msg.Type=="Bye"{
 		clearNodeInfo(nm, msg.Sender)
@@ -150,6 +159,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		nodeSend(retmsg, selfsoc)
 
 	}
+}
 
 }
 
@@ -205,49 +215,38 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		endmsg := encode(leader,"","","","","Leader","","","","",dummy,"")
 		self.bootstrapsoc.Send(endmsg,0)
 	}else if msg.Type=="Board"{
+		c:=0
 		counter := make(map[string]bool)
-		bo := encode("Master","","","",encodeRep(Board),"BoardRequest","","","","",dummy,"")
+		bo := encode("Master","","","",encodeRep(Board),"BoardLeader","","","","",dummy,"")
 		LeadNodeSend(bo,self)
-		for _,child := range getChildren(nm){
+		size := len(getLeaders(nm)) - 1
+		for _,child := range getLeaders(nm){
 			counter[child] = false
 		}
+		var a map[string]int
 		for {
 			s := MQpop(self.recvq)
 				if s != nil {
 					message := fmt.Sprint(s)
 					m := decode(message)
-					req := decode(msg)
 					if m.Type == "BoardRequest" {
-						if (m.Job == req.Job){
+
 							counter[m.Sender]=true
-							a,_ := strconv.Atoi(m.Value)
-							if (a > maxRep){
-								if(bestNode.NodeName != "") {
-									nplist = append(nplist, bestNode.NodeName)
-								}
-								bestNode = m.Result.NodeInf
-								maxRep = a
-							} else {
-								nplist = append(nplist, m.Receiver)
+							a = decodeRep(m.Value)
+							for k, v := range a {
+								Board[k] = v
 							}
-							c = c + 1
+							c++
 							if (c==size){
-								notpicked = stringulate(nplist)
-								return bestNode, notpicked
+								bo := encode("Master","","","",encodeRep(Board),"BoardReply","","","","",dummy,"")
+								LeadNodeSend(bo,self)
 							}
 
-
-						}
-						//check if we received all metrics from GLs and set bestnode accordingly
-					} else if m.Type == "Request" {
-						MQpush(self.recvq, s)
 					}
+
 				}
 			}
 		}
-		board := encode("Master","","","",encodeRep(Board),"Board","","","","",dummy,"")
-
-	}
 
 }
 

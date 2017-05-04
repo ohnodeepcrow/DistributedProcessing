@@ -31,7 +31,7 @@ func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input st
 			ms=metricString(metric)
 			nodeinf.PrimeMetric=updateReputation(nodeinf.PrimeMetric, metric, node.NodeName, primeScorer)
 			metric.NodeInf = nodeinf
-			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Input)
+			msg = encode(node.NodeName, m.Sender,m.Kind,m.Job,ms, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Value)
 
 		} else if m.Kind == "Hash" {
 			metric = crackHash(m.Value)

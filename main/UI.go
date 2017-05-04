@@ -380,8 +380,8 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 	}
 	})
 	btn1 := setup_btn("Train Network with test data", func() {
-			trainPrime(nm, nodesoc, nodeinf)
-			trainHash(nm, nodesoc, nodeinf)
+			trainPrime(nodesoc, nodeinf)
+			trainHash(nodesoc, nodeinf)
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
 	})
@@ -397,8 +397,8 @@ var (
 )
 
 
-func startUI(n NodeMap, self NodeSocket, nodeinfo NodeInfo) {
-	nm = n
+func startUI(self NodeSocket, nodeinfo NodeInfo) {
+
 	nodesoc=self
 	nodeinf=nodeinfo
 

@@ -74,7 +74,7 @@ func main(){
 	go startSender(ns)
 	go startMessageHandler(self.NodeName, myNodeMap, ns)
 	//go startIO(cntxt, ns, self)
-	go startUI(myNodeMap, ns, self)
+	go startUI(ns, self)
 
 	wg.Wait()
 }

@@ -196,7 +196,7 @@ func primeScorer(met metric, rep Reputation) Reputation{
 func getRepBoard(self NodeSocket,nodeinf NodeInfo) {
 	var dummy metric;
 
-	m := encode(nodeinf.NodeName, "", "","","","Board","","","","",dummy,"")
+	m := encode(nodeinf.NodeName, "", "Prime","","","Board","","","","",dummy,"")
 	if(nodeinf.Leader==true && nodeinf.Master==false){
 
 		LeadNodeSend(m,self)

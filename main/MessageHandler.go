@@ -78,7 +78,9 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	}else if (msg.Type=="BoardReply")  {
 		nodeSend(m, selfsoc) // group node forwards the request to master node
 	}else if(msg.Type=="BoardLeader"  )  {
+		fmt.Print("inside leader")
 		for _,child := range getChildren(nm){
+			fmt.Print(child)
 			r[child]=nm.Nodes[child].PrimeMetric.Score
 			r1[child]=nm.Nodes[child].HashMetric.Score
 		}
@@ -86,6 +88,9 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		s1:=encodeRep(r1)
 		var m metric
 		retmsg := encode(node.NodeName,"", msg.Kind, msg.Job,s, "BoardRequest", s1,"", "", node.DataSendPort, m,"")
+		fmt.Print("** ")
+		fmt.Print(retmsg)
+		fmt.Print("\n")
 		LeadNodeSend(retmsg, selfsoc)
 	}else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
 
@@ -222,8 +227,8 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		c:=0
 		counter := make(map[string]bool)
 		fmt.Print("##\n")
-		bo := encode("Master","","","","","BoardLeader","","","","",dummy,"")
-		LeadNodeSend(bo,self)
+		bo := encode("Master","","Prime","","","BoardLeader","","","","",dummy,"")
+		nodeSend(bo,self)
 		size := len(getLeaders(nm)) - 1
 		for _,child := range getLeaders(nm){
 			counter[child] = false
@@ -328,7 +333,7 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	} else if m.Receiver == selfname && m.Type == "Reply"{
 		processRequestSend(nm.Nodes[selfname], selfsoc, message)
 	} else if selfsoc.leader == true {
-			//println("Retransmitting " + message)
+			println("Retransmitting " + message)
 			LeadNodeRec(selfname, nm, selfsoc, message)
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)

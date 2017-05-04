@@ -232,7 +232,9 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 
 func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (NodeInfo,string) {
 	counter := make(map[string]bool)
-	size := len(getChildren(nm))
+	size := len(getLeaders(nm))
+	fmt.Println(size)
+	fmt.Println(getLeaders(nm))
 	c := 0
 	maxRep := -1
 	var bestNode NodeInfo

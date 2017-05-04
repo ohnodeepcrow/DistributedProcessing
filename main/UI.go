@@ -341,6 +341,8 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 
 func repTable(c1 string, c2 string, c3 string) gtk.IWidget {
 	box := setup_box(gtk.ORIENTATION_VERTICAL)
+	listStore,_ := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING)
+	listStore1,_ := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING)
 	treeView, listStore := setupTreeView3(c1, c2)
 	sw, _ := gtk.ScrolledWindowNew(nil, nil)
 	if nodeinf.Master {

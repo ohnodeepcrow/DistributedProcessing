@@ -83,7 +83,7 @@ func heartbeatSender(socket NodeSocket, selfname string){
 	}
 }
 
-func heartbeatUpdater(soc NodeSocket, hbmap map[string]time.Time, mut sync.Mutex){
+func heartbeatUpdater(soc NodeSocket, hbmap map[string]time.Time, mut *sync.Mutex){
 	for{
 		hstr := MQpop(soc.hbqueue)
 		if hstr == nil{
@@ -114,7 +114,7 @@ func selfTimeout(selfname string, socket NodeSocket){
 	}
 }
 
-func heartbeatChecker(selfname string, soc NodeSocket, hbmap map[string]time.Time, mut sync.Mutex){
+func heartbeatChecker(selfname string, soc NodeSocket, hbmap map[string]time.Time, mut *sync.Mutex){
 	for{
 		time.Sleep(timeOutThreshold/5)
 		mut.Lock()
@@ -133,7 +133,7 @@ func heartbeatChecker(selfname string, soc NodeSocket, hbmap map[string]time.Tim
 
 func startHeartbeatService(selfname string, soc NodeSocket){
 	hbmap := make(map[string]time.Time)
-	var mut sync.Mutex
+	var mut = &sync.Mutex{}
 	go heartbeatSender(soc, selfname)
 	go heartbeatUpdater(soc, hbmap, mut)
 	go heartbeatChecker(selfname, soc, hbmap, mut)

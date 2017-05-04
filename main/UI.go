@@ -350,34 +350,38 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 	sw1.Add(treeView1)
 	box.PackStart(sw1, true, true, 10)
 
-
+	var me map[string]int
 	// Add some rows to the list store
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
-	addRow3(listStore1, "r57", "Gofix command added for rewriting code for new APIs","r57")
+
 
 	btn := setup_btn("Refresh", func() {
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
+		getRepBoard(nodesoc,nodeinf)
+		for {
+			s := MQpop(nodesoc.recvq)
+			if s != nil {
+				message := fmt.Sprint(s)
+				m := decode(message)
+				if m.Type == "BoardRequest" {
+					me = decodeRep(m.Value)
+					for k, v := range me {
+						addRow3(listStore, k, strconv.Itoa(v), "")
+					}
+					e := decodeRep(m.Value)
+					for k, v := range e {
+						addRow3(listStore1, k, strconv.Itoa(v), "")
+					}
+				}else{
+					MQpush(nodesoc.recvq,s)
+
+			}
+		}
+	}
 	})
 	btn1 := setup_btn("Train Network with test data", func() {
-			trainPrime(nm, nodesoc, nodeinf)
-			trainHash(nm, nodesoc, nodeinf)
+			trainPrime(nodesoc, nodeinf)
+			trainHash(nodesoc, nodeinf)
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
 	})
@@ -393,8 +397,8 @@ var (
 )
 
 
-func startUI(n NodeMap, self NodeSocket, nodeinfo NodeInfo) {
-	nm = n
+func startUI(self NodeSocket, nodeinfo NodeInfo) {
+
 	nodesoc=self
 	nodeinf=nodeinfo
 

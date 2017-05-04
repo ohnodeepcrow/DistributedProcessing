@@ -25,6 +25,7 @@ type NodeSocket struct {
 }
 
 
+
 func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) NodeSocket{
 	ssoc, err := context.NewSocket(zmq4.PUB)
 	check(err)
@@ -90,7 +91,6 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	check(err)
 	counter=0
 	ds:=establishServer(self.NodeAddr, self.DataSendPort)
-
 	var ret NodeSocket
 	bs := establishBootstrapService(self.NodeAddr, self.BootstrapPort)
 	ret.bootstrapsoc=bs

@@ -46,3 +46,20 @@ func IsMyMessage(self NodeInfo, message Message) bool{
 	}
 	return false
 }
+
+func encodeRep(rep map[string]int) string{
+	b, err := json.Marshal(rep)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return ""
+	}else{
+		return string(b)
+	}
+
+}
+func decodeRep(rep string) map[string]int{
+	res := []byte(rep)
+	var m map[string]int
+	json.Unmarshal(res,&m)
+	return m
+}

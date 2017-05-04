@@ -20,6 +20,11 @@ type Reputation struct {
 	Correct 	int
 }
 
+
+var BoardH map[string]int
+var BoardP map[string]int
+
+
 //Map that maps node names to the first time that node was seen
 type NodeMap struct{
 	Nodes map[string]NodeInfo
@@ -37,6 +42,13 @@ func newNodeInfo(name string, ut time.Time) NodeInfo{
 	ret.NodeName = name
 	ret.Uptime = ut
 	//TODO: ensure all needed fields are filled in
+	return ret
+}
+
+func newMasterBoard(self NodeInfo) map[string]int{
+	var ret map[string]int
+	ret = make(map[string]int)
+	ret[self.NodeName]=0
 	return ret
 }
 
@@ -65,6 +77,16 @@ func getChildren(nm NodeMap) []string{
 	keys := make([]string, len(nm.Nodes))
 	for k,v := range nm.Nodes {
 		if (!v.Leader) && (!v.Master){
+			keys = append(keys, k)
+		}
+	}
+	return keys
+}
+
+func getLeaders(nm NodeMap) []string{
+	keys := make([]string, len(nm.Nodes))
+	for k,v := range nm.Nodes {
+		if (v.Leader) && (!v.Master){
 			keys = append(keys, k)
 		}
 	}
@@ -169,4 +191,19 @@ func primeScorer(met metric, rep Reputation) Reputation{
 	rep.Count += 1
 	rep.Score = (rep.Correct*1.0) / (rep.Count *1.0)* 100
 	return rep
+}
+
+func getRepBoard(self NodeSocket,nodeinf NodeInfo) {
+	var dummy metric;
+
+	m := encode(nodeinf.NodeName, "", "Prime","","","Board","","","","",dummy,"")
+	if(nodeinf.Leader==true && nodeinf.Master==false){
+
+		LeadNodeSend(m,self)
+	}else if(nodeinf.Master==true && nodeinf.Leader==true){
+
+	}else{
+
+		nodeSend(m,self)
+	}
 }

@@ -7,7 +7,7 @@ import (
 	"strings"
 	_"context"
 )
-
+var GROUPSIZE int
 var counter int
 var leader string
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
@@ -130,7 +130,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		fmt.Println(nm.Nodes["bob"].PrimeMetric)
 		fmt.Println(nm.Nodes["bob"].HashMetric)
 	}else if msg.Type=="Connect" {
-		if counter<1{
+		if counter < GROUPSIZE{
 			counter++
 			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 			dummy.NodeInf=nm.Nodes[node.NodeName]

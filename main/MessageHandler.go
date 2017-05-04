@@ -222,8 +222,8 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		c:=0
 		counter := make(map[string]bool)
 		fmt.Print("##\n")
-		bo := encode("Master","","","","","BoardLeader","","","","",dummy,"")
-		LeadNodeSend(bo,self)
+		bo := encode("Master","","Prime","","","BoardLeader","","","","",dummy,"")
+		nodeSend(bo,self)
 		size := len(getLeaders(nm)) - 1
 		for _,child := range getLeaders(nm){
 			counter[child] = false
@@ -330,8 +330,8 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	} else if m.Receiver == selfname && m.Type == "Reply"{
 		processRequestSend(nm.Nodes[selfname], selfsoc, message)
 	} else if selfsoc.leader == true {
-		//println("Retransmitting " + message)
-		LeadNodeRec(selfname, nm, selfsoc, message)
+			println("Retransmitting " + message)
+			LeadNodeRec(selfname, nm, selfsoc, message)
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)
 	}else if m.Type == "UpdateUptime"{

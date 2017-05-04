@@ -97,11 +97,11 @@ func generateHash ()string{
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func trainHash(nm NodeMap, self NodeSocket,nodeinfo NodeInfo){
+func trainHash(self NodeSocket,nodeinfo NodeInfo){
 	for i:=0;i<10 ;i++  {
 		var m metric
 		msg := encode(nodeinfo.NodeName, nodeinfo.NodeName,"Hash",generateHash(),getCurrentTimestamp(), "Train",nodeinfo.NodeGroup,"","","",m,"")
-
-		processRequestReceive(nm, nodeinfo.NodeName, self ,msg )
+		MQpush(self.recvq,msg)
+		//processRequestReceive(nm, nodeinfo.NodeName, self ,msg )
 	}
 }

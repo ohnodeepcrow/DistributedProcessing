@@ -168,7 +168,7 @@ func updateReputation(repmets Reputation, newmet metric, node string, scorer fun
 func hashScorer(met metric, rep Reputation) Reputation{
 	rep.Count += 1
 	newscore := rep.Score / rep.Count
-	newscore += int(met.hPerf)
+	newscore += -1*int(met.hPerf)
 	//fmt.Print(newscore)
 	//fmt.Println(" HASHSCORER debug")
 	newscore = newscore/ rep.Count

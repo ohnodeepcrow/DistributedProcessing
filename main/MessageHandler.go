@@ -373,7 +373,7 @@ func SendResult(self NodeSocket, node NodeInfo, m Message){
 	addr:=node.NodeAddr
 	port:=node.DataSendPort
 	send_sock:= establishClient(addr,port)
-	msg := encode(m.Sender, m.Receiver,m.Kind,m.Job,m.Value,m.Type,m.ReceiverGroup,m.SenderGroup,m.Address,m.Port,m.Result,m.Value)
+	msg := encode(m.Sender, m.Receiver,m.Kind,m.Job,m.Value,m.Type,m.ReceiverGroup,m.SenderGroup,m.Address,m.Port,m.Result,m.Input)
 	send_sock.Send(msg,0)
 	send_sock.Disconnect(addr + ":" + port)
 	send_sock.Close()

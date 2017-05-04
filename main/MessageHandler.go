@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"fmt"
 	"time"
-	"github.com/pebbe/zmq4"
 	"strings"
 	_"context"
 )
@@ -12,10 +11,9 @@ import (
 var counter int
 var leader string
 func processRequestSend(node NodeInfo, self NodeSocket, input string) {
-	m:= decode(input)
-		 if m.Type=="Selected" && m.Sender!=m.Receiver{
-			ReceiveResult(self,m)
-		}
+	fmt.Println("DEBUG: " + input)
+	m := decode(input)
+	MQpush(self.dataq, m)
 }
 
 
@@ -34,7 +32,7 @@ func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input st
 			ms=metricString(metric)
 			nodeinf.PrimeMetric=updateReputation(nodeinf.PrimeMetric, metric, node.NodeName, primeScorer)
 			metric.NodeInf = nodeinf
-			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,num.String())
+			msg = encode(node.NodeName, m.Sender,m.Kind,ms,m.Job, "Reply",node.NodeGroup,m.SenderGroup,node.NodeAddr,node.DataSendPort,metric,m.Input)
 
 		} else if m.Kind == "Hash" {
 			metric = crackHash(m.Value)
@@ -55,11 +53,11 @@ func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input st
 		//fmt.Println(node.PrimeMetric)
 
 		if m.Sender!=m.Receiver{
-			SendResult(self,node,decode(msg))
+			SendResult(self,m.Result.NodeInf,decode(msg))
 		} else if m.Type == "Selected"{
 			MQpush(self.dataq, decode(msg))
 		}
-		updatemsg := encode(node.NodeName, "",m.Kind, ms, m.Job,"Update",node.NodeGroup,"","","",metric,"")
+		updatemsg := encode(node.NodeName, m.Result.NodeInf.NodeName,m.Kind, ms, m.Job,"Update",node.NodeGroup,"","","",metric,"")
 		nodeSend(updatemsg, self)
 	}
 }
@@ -123,11 +121,11 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 			updateNodeInfo(nm, msg.Sender, msg.Result.NodeInf)
 			dummy.NodeInf=nm.Nodes[node.NodeName]
 			retmsg := encode(node.NodeName, "", "", "","", "Accepted", "","", "", "", dummy,"")
-			selfsoc.datasendsock.Send(retmsg,0)
+			selfsoc.bootstrapsoc.Send(retmsg,0)
 
 		}else {
 			retmsg := encode(node.NodeName, "", "", "","", "Rejected", "","", "", "", dummy,"")
-			selfsoc.datasendsock.Send(retmsg,0)
+			selfsoc.bootstrapsoc.Send(retmsg,0)
 		}
 
 	}else if msg.Type=="Hi" {
@@ -197,15 +195,15 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		for leader,nodeinfo := range nm.Nodes{
 
 			if (leader != node.NodeName){
-				msg := encode(leader,"","","","","Leader","","",nodeinfo.NodeAddr,nodeinfo.DataSendPort,dummy,"")
-				self.datasendsock.Send(msg,0)
+				msg := encode(leader,"","","","","Leader","","",nodeinfo.NodeAddr,nodeinfo.BootstrapPort,dummy,"")
+				self.bootstrapsoc.Send(msg,0)
 				//Req/Rep needs to send/receive
 				//This means we need 1 send and 1 recv before the next send
-				self.datasendsock.Recv(0)
+				self.bootstrapsoc.Recv(0)
 			}
 		}
 		endmsg := encode(leader,"","","","","Leader","","","","",dummy,"")
-		self.datasendsock.Send(endmsg,0)
+		self.bootstrapsoc.Send(endmsg,0)
 	}
 }
 
@@ -271,9 +269,8 @@ func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	m:= decode(message)
 	if m.Receiver == selfname && m.Type == "Selected"{
 		processRequestReceive(nm, selfname, selfsoc, message)
-	}else if  m.Sender == selfname && m.Type == "Selected"{
-		processRequestSend(selfnode, selfsoc, message)
-
+	} else if m.Receiver == selfname && m.Type == "Reply"{
+		processRequestSend(nm.Nodes[selfname], selfsoc, message)
 	} else if selfsoc.leader == true {
 			//println("Retransmitting " + message)
 			LeadNodeRec(selfname, nm, selfsoc, message)
@@ -294,6 +291,7 @@ func startMessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
 	}
 }
 
+/*
 func ReceiveResult(self NodeSocket,msg Message){
 	addr := msg.Result.NodeInf.NodeAddr
 	port := msg.Result.NodeInf.DataSendPort
@@ -313,18 +311,15 @@ func ReceiveResult(self NodeSocket,msg Message){
 
 
 }
+*/
+
 func SendResult(self NodeSocket, node NodeInfo, m Message){
 	addr:=node.NodeAddr
 	port:=node.DataSendPort
-	send_sock:= establishServer(addr,port)
+	send_sock:= establishClient(addr,port)
 	msg := encode(m.Sender, m.Receiver,m.Kind,m.Job,m.Value,m.Type,m.ReceiverGroup,m.SenderGroup,m.Address,m.Port,m.Result,m.Value)
-	for {
-		signal,_ := send_sock.Recv(zmq4.DONTWAIT)
-		if (signal != ""){
-			send_sock.Send(msg,0)
-			return
-		}
-		time.Sleep(time.Millisecond*50)
-	}
+	send_sock.Send(msg,0)
+	send_sock.Disconnect(addr + ":" + port)
+	send_sock.Close()
 }
 

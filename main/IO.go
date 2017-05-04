@@ -46,7 +46,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 				fmt.Println("No Messages!")
 			}
 			for n :=  ml.Front(); n != nil ; n = n.Next(){
-				test := n.Value.(Message)
+				//test := n.Value.(Message)
 				/*
 				fmt.Println("====Results====")
 				fmt.Println("Test: " + test.Kind)
@@ -54,7 +54,7 @@ func startIO(cntxt *zmq4.Context, self NodeSocket, nodeinfo NodeInfo){
 				fmt.Println("Processed By: " + test.Sender)
 				fmt.Println()
 				*/
-				go ReceiveResult(self,test)
+				//go ReceiveResult(self,test)
 			}
 		} else if input=="g"{
 			fmt.Println(generateCandidate())

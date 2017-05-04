@@ -20,11 +20,10 @@ type NodeInfo struct {
 	MasterAddr	string
 	SendPort	string
 	RecvPort	string
-	BootPort	string
 	LeaderSendPort	string
 	LeaderRecvPort	string
 	Effort 		string
-	DataRecvPort 	string
+	BootstrapPort 	string
 	DataSendPort	string
 	HashMetric 	Reputation
 	PrimeMetric 	Reputation
@@ -115,15 +114,15 @@ func ParseNode(nodelines []string) NodeInfo{
 
 			check(err)
 		}else if strings.Contains(lin,"drp"){
-			retnode.DataRecvPort =  strings.Split(lin,"=")[1]
+			retnode.BootstrapPort =  strings.Split(lin,"=")[1]
 
 			check(err)
 		}else if strings.Contains(lin,"dsp"){
 			retnode.DataSendPort =  strings.Split(lin,"=")[1]
 
 			check(err)
-		}else if strings.Contains(lin,"BootPort"){
-			retnode.BootPort =  strings.Split(lin,"=")[1]
+		}else if strings.Contains(lin,"BootstrapPort"){
+			retnode.BootstrapPort =  strings.Split(lin,"=")[1]
 
 			check(err)
 		}

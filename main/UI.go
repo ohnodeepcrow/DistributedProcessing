@@ -177,37 +177,39 @@ func preImage(c1 string) gtk.IWidget {
 		//fmt.Println(text)
 	})
 	btn1 := setup_btn("Check Result", func() {
+		str=get_text_from_tview(result)
+		//time.Sleep(time.Second*2)
+		_, err := glib.IdleAdd(LabelSetTextIdle, "")
+		if err != nil {
+			log.Fatal("IdleAdd() failed:", err)
+		}
+		ml := MQpop(nodesoc.dataq)
+		for ;ml != nil;{
 
-		go func() {
-			str=get_text_from_tview(result)
-			//time.Sleep(time.Second*2)
-			_, err := glib.IdleAdd(LabelSetTextIdle, "")
-			if err != nil {
-				log.Fatal("IdleAdd() failed:", err)
+			if ml == nil {
+				str += ""
 			}
-			ml := MQpopAll(nodesoc.dataq)
-			if ml.Front() == nil{
-				str+=""
-			}
-			for n :=  ml.Front(); n != nil ; n = n.Next(){
-				test := n.Value.(Message)
+			test := ml.(Message)
 
-				if(test.Type != "Reply"){
-					break
-				}
-				str+="Input: "
-				str+=test.Input
-				str+="\n"
-				str+=test.Value
-				str+="\n"
-				str+="Processed By: "
-				str+=test.Sender
-				str+="\n\n"
+			//fmt.Println("====Results====")
+			if (test.Type != "Reply") {
+				continue
 			}
 
-			set_text_in_tview(result,str)
+			str += "Input: "
+			str += test.Input
+			str += "\n"
+			str += "Results:\n"
+			str += test.Value
+			str += "\n"
+			str += "Processed By: "
+			str += test.Sender
+			str += "\n\n"
 
-		}()
+			ml = MQpop(nodesoc.dataq)
+		}
+		set_text_in_tview(result, str)
+
 
 		//fmt.Println(text)
 	})
@@ -282,41 +284,42 @@ func isPrime(c1 string, c2 string) gtk.IWidget {
 		//fmt.Println(text)
 	})
 	btn1 := setup_btn("Check Result", func() {
+		str=get_text_from_tview(result)
+		//time.Sleep(time.Second*2)
+		_, err := glib.IdleAdd(LabelSetTextIdle, "")
+		if err != nil {
+			log.Fatal("IdleAdd() failed:", err)
+		}
+		ml := MQpop(nodesoc.dataq)
+		for ;ml != nil;{
 
-		go func() {
-			str=get_text_from_tview(result)
-			//time.Sleep(time.Second*2)
-			_, err := glib.IdleAdd(LabelSetTextIdle, "")
-			if err != nil {
-				log.Fatal("IdleAdd() failed:", err)
+			if ml == nil {
+				str += ""
 			}
-			ml := MQpopAll(nodesoc.dataq)
-			if ml.Front() == nil{
-				str+=""
-			}
-			for n :=  ml.Front(); n != nil ; n = n.Next(){
-				test := n.Value.(Message)
+			test := ml.(Message)
 
-				//fmt.Println("====Results====")
-				if(test.Type != "Reply"){
-					break
-				}
-
-				str+="Input: "
-				str+=test.Input
-				str+="\n"
-				str+=test.Value
-				str+="\n"
-				str+="Processed By: "
-				str+=test.Sender
-				str+="\n\n"
+			//fmt.Println("====Results====")
+			if (test.Type != "Reply") {
+				continue
 			}
 
-			set_text_in_tview(result,str)
+			str += "Input: "
+			str += test.Input
+			fmt.Println(test.Input)
+			str += "\n"
+			str += test.Value
+			fmt.Println(test.Value)
+			str += "\n"
+			str += "Processed By: "
+			str += test.Sender
+			str += "\n\n"
 
-		}()
+			ml = MQpop(nodesoc.dataq)
+		}
+		set_text_in_tview(result, str)
 
-		//fmt.Println(text)
+
+	//fmt.Println(text)
 	})
 
 	btn2 := setup_btn("Clear Results", func() {

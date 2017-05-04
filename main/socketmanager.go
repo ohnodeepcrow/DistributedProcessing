@@ -17,8 +17,8 @@ type NodeSocket struct {
 	recvsock *zmq4.Socket //leaf multicast receive
 	leadersendsock *zmq4.Socket //leader multicast send
 	leaderrecvsock *zmq4.Socket //leader multicast receive
-	datasendsock *zmq4.Socket //p2p data send
-	datarecvsock *zmq4.Socket //p2p receive
+	datasendsock *zmq4.Socket //p2p data socket
+	bootstrapsoc *zmq4.Socket //bootstrap socket
 	leader   bool //Am I a group leader?
 	master bool //Am I the root node?
 }
@@ -48,11 +48,14 @@ func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) Node
 	err = lrsoc.Connect(socstr)
 	check(err)
 
-	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+	var ret NodeSocket
 
+	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+	bs := establishBootstrapService(self.NodeAddr, self.BootstrapPort)
+	ret.bootstrapsoc=bs
 
 	fmt.Print("")
-	var ret NodeSocket
+
 	ret.leader = true
 	ret.datasendsock=ds
 	ret.master = false
@@ -85,7 +88,10 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	check(err)
 	counter=0
 	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+
 	var ret NodeSocket
+	bs := establishBootstrapService(self.NodeAddr, self.BootstrapPort)
+	ret.bootstrapsoc=bs
 	ret.datasendsock=ds
 	ret.leader = false
 	ret.master = true
@@ -113,6 +119,8 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 
 	var ret NodeSocket
 	ds:=establishServer(self.NodeAddr, self.DataSendPort)
+	bs := establishBootstrapService(self.NodeAddr, self.BootstrapPort)
+	ret.bootstrapsoc=bs
 	ret.datasendsock=ds
 	ret.leader = false
 	ret.master = false
@@ -128,18 +136,28 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 
 func establishClient(addr string, port string) *zmq4.Socket{
 	context,_ := zmq4.NewContext()
-	soc,_ := context.NewSocket(zmq4.REQ)
+	soc,_ := context.NewSocket(zmq4.PUSH)
 	socstr := "tcp://" + addr + ":" + port
 	soc.Connect(socstr)
 	return soc
 }
 func establishServer(addr string, port string)*zmq4.Socket{
 	context,_ := zmq4.NewContext()
+	soc,_ := context.NewSocket(zmq4.PULL)
+	socstr := "tcp://" + addr + ":" + port
+	soc.Bind(socstr)
+	return soc
+}
+
+func establishBootstrapService(addr string, port string)*zmq4.Socket{
+	context,_ := zmq4.NewContext()
 	soc,_ := context.NewSocket(zmq4.REP)
 	socstr := "tcp://" + addr + ":" + port
 	soc.Bind(socstr)
 	return soc
 }
+
+
 func nodeSend(str string, soc NodeSocket){
 	MQpush(soc.sendq,str)
 	//_, err := soc.sendsock.Send(str, 0)
@@ -180,6 +198,11 @@ func nodeReceive(soc NodeSocket){
 			fmt.Println("Data receive: "+(fmt.Sprint(tmp2)))
 			MQpush(soc.recvq, tmp2)
 		}
+		tmp3,err := soc.bootstrapsoc.Recv(zmq4.DONTWAIT)
+		if tmp3 != "" {
+			fmt.Println("Bootstrap receive: "+(fmt.Sprint(tmp3)))
+			MQpush(soc.recvq, tmp3)
+		}
 		if err == syscall.EAGAIN {
 			continue
 		}
@@ -214,7 +237,7 @@ func startReceiver(soc NodeSocket){
 
 func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap) NodeSocket{
 	MasterAddr := master.NodeAddr
-	MasterPort := master.DataSendPort
+	MasterPort := master.BootstrapPort
 	var dummy metric
 	dummy.NodeInf=self
 	m1 := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Boot","","","","",dummy,"")
@@ -274,6 +297,8 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 							ns := establishMember(context, self, m.Result.NodeInf)
 							m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
 							nodeSend(m,ns)
+							soc2.Disconnect(socstr)
+							soc2.Close()
 							return ns
 
 						}else if m.Type=="Rejected"{

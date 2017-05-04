@@ -46,3 +46,4 @@ func IsMyMessage(self NodeInfo, message Message) bool{
 	}
 	return false
 }
+

@@ -71,7 +71,7 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	msg:=decode(m)
 	var dummy metric
 
-	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
+	if (msg.Type =="Request" || msg.Type=="Board") && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
 	} else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
 		
@@ -204,7 +204,10 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		}
 		endmsg := encode(leader,"","","","","Leader","","","","",dummy,"")
 		self.bootstrapsoc.Send(endmsg,0)
+	}else if msg.Type=="Board"{
+
 	}
+
 }
 
 func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (NodeInfo,string) {

@@ -374,6 +374,7 @@ func repTable(c1 string, c2 string, c3 string, c4 string) gtk.IWidget {
 	btn := setup_btn("Refresh", func() {
 		//text := get_text_from_tview(treeView)
 		//fmt.Println(text)
+		getRepBoard(nodesoc,nodeinf)
 	})
 	btn1 := setup_btn("Train Network with test data", func() {
 			trainPrime(nm, nodesoc, nodeinf)

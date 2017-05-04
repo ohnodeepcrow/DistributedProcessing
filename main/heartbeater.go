@@ -14,26 +14,6 @@ type heartbeat struct{
 	Timestamp time.Time
 }
 
-func HandleTimeout(nm NodeMap, selfname string, soc NodeSocket, othername string) {
-	self := nm.Nodes[selfname]
-	other,exists := nm.Nodes[othername]
-	if !exists{
-		fmt.Println("DOESN'T EXIST: " + othername)
-		return
-	}
-
-	if other.Leader && !self.Master{
-		//If the other node is our leader, we need a new leader!
-	} else if other.Master{
-		//If the other node is the master, we need a new master!
-	} else{
-		delete(nm.Nodes, othername)
-		counter--
-		fmt.Println("Deleted " + othername + " from our group!")
-		//The other one is below us... just clean up our entries
-	}
-}
-
 func hbencode(sender string, timestamp time.Time) string{
 	ret := "HBmsg|" + sender + "|"
 	ret += timestamp.Format(time.RFC3339)
@@ -98,19 +78,6 @@ func heartbeatUpdater(soc NodeSocket, hbmap map[string]time.Time, mut sync.Mutex
 	}
 }
 
-func selfTimeout(selfname string, socket NodeSocket){
-	var emptytime time.Time
-	h := hbencode(selfname, emptytime)
-	if socket.master {
-		MQpush(socket.sendq, h)
-	} else if socket.leader{
-		MQpush(socket.sendq, h)
-		MQpush(socket.lsendq, h)
-	} else {
-		MQpush(socket.sendq, h)
-	}
-}
-
 func heartbeatChecker(selfname string, soc NodeSocket, hbmap map[string]time.Time, mut sync.Mutex){
 	for{
 		time.Sleep(timeOutThreshold/5)
@@ -119,9 +86,7 @@ func heartbeatChecker(selfname string, soc NodeSocket, hbmap map[string]time.Tim
 			if time.Since(v) > timeOutThreshold{
 				fmt.Println("TIMEOUT DETECTED FOR NODE " + k + "!")
 				delete(hbmap, k)
-				var dummy metric
-				msg := encode(selfname, selfname, "", "", k, "TimeoutDetected", "", "", "", "", dummy, k)
-				MQpush(soc.recvq, msg)
+				//TODO: create "TimeoutDetected" message to self
 			}
 		}
 		mut.Unlock()

@@ -313,8 +313,9 @@ func BootStrap(context *zmq4.Context, self NodeInfo, master NodeInfo, nm NodeMap
 						m:=decode(temp)
 						if m.Type=="Accepted"{
 							ns := establishMember(context, self, m.Result.NodeInf)
-							m := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
-							nodeSend(m,ns)
+							mg := encode(self.NodeName, "", "",getCurrentTimestamp(),"","Hi","","","","",dummy,"")
+							nodeSend(mg,ns)
+							nm.Nodes[m.Result.NodeInf.NodeName] = m.Result.NodeInf
 							soc2.Disconnect(socstr)
 							soc2.Close()
 							return ns

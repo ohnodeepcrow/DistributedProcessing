@@ -22,15 +22,18 @@ func HandleTimeout(nm NodeMap, selfname string, soc NodeSocket, othername string
 		return
 	}
 
-	if other.Leader && !self.Master{
-		//If the other node is our leader, we need a new leader!
-	} else if other.Master{
-		//If the other node is the master, we need a new master!
-	} else{
+	if other.Leader && self.Master{
 		delete(nm.Nodes, othername)
 		counter--
 		fmt.Println("Deleted " + othername + " from our group!")
 		//The other one is below us... just clean up our entries
+	} else if self.Leader{
+		delete(nm.Nodes, othername)
+		counter--
+		fmt.Println("Deleted " + othername + " from our group!")
+		//The other one is below us... just clean up our entries
+	} else {
+		panic("OUR LEADER WENT DOWN")
 	}
 }
 

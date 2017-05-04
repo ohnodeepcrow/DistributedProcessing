@@ -205,6 +205,47 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 		endmsg := encode(leader,"","","","","Leader","","","","",dummy,"")
 		self.bootstrapsoc.Send(endmsg,0)
 	}else if msg.Type=="Board"{
+		counter := make(map[string]bool)
+		bo := encode("Master","","","",encodeRep(Board),"BoardRequest","","","","",dummy,"")
+		LeadNodeSend(bo,self)
+		for _,child := range getChildren(nm){
+			counter[child] = false
+		}
+		for {
+			s := MQpop(self.recvq)
+				if s != nil {
+					message := fmt.Sprint(s)
+					m := decode(message)
+					req := decode(msg)
+					if m.Type == "BoardRequest" {
+						if (m.Job == req.Job){
+							counter[m.Sender]=true
+							a,_ := strconv.Atoi(m.Value)
+							if (a > maxRep){
+								if(bestNode.NodeName != "") {
+									nplist = append(nplist, bestNode.NodeName)
+								}
+								bestNode = m.Result.NodeInf
+								maxRep = a
+							} else {
+								nplist = append(nplist, m.Receiver)
+							}
+							c = c + 1
+							if (c==size){
+								notpicked = stringulate(nplist)
+								return bestNode, notpicked
+							}
+
+
+						}
+						//check if we received all metrics from GLs and set bestnode accordingly
+					} else if m.Type == "Request" {
+						MQpush(self.recvq, s)
+					}
+				}
+			}
+		}
+		board := encode("Master","","","",encodeRep(Board),"Board","","","","",dummy,"")
 
 	}
 

@@ -20,10 +20,9 @@ type Reputation struct {
 	Correct 	int
 }
 
-type Board struct{
-	NodeName string
-	Score	int
-}
+
+var Board map[string]int
+
 
 //Map that maps node names to the first time that node was seen
 type NodeMap struct{
@@ -42,6 +41,13 @@ func newNodeInfo(name string, ut time.Time) NodeInfo{
 	ret.NodeName = name
 	ret.Uptime = ut
 	//TODO: ensure all needed fields are filled in
+	return ret
+}
+
+func newMasterBoard(self NodeInfo) map[string]int{
+	var ret map[string]int
+	ret = make(map[string]int)
+	ret[self.NodeName]=0
 	return ret
 }
 
@@ -70,6 +76,16 @@ func getChildren(nm NodeMap) []string{
 	keys := make([]string, len(nm.Nodes))
 	for k,v := range nm.Nodes {
 		if (!v.Leader) && (!v.Master){
+			keys = append(keys, k)
+		}
+	}
+	return keys
+}
+
+func getLeaders(nm NodeMap) []string{
+	keys := make([]string, len(nm.Nodes))
+	for k,v := range nm.Nodes {
+		if (v.Leader) && (!v.Master){
 			keys = append(keys, k)
 		}
 	}

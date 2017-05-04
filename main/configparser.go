@@ -6,6 +6,7 @@ import (
 	"strings"
 	"fmt"
 	"time"
+	"strconv"
 )
 
 type Configs struct{
@@ -58,7 +59,7 @@ func ParseConfigString(raw string) Configs{
 		if lin == "Node" {
 			typestr = "node"
 			startind = ind
-		} else if lin == "End" {
+		}else if lin == "End" {
 			endind = ind
 		}
 		if startind > 0 && endind > 0{
@@ -125,6 +126,8 @@ func ParseNode(nodelines []string) NodeInfo{
 			retnode.BootstrapPort =  strings.Split(lin,"=")[1]
 
 			check(err)
+		} else if strings.Contains(lin, "GroupSize"){
+			GROUPSIZE,_ = strconv.Atoi(strings.Split(lin,"=")[1])
 		}
 
 

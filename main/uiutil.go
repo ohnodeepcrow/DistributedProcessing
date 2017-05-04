@@ -29,7 +29,7 @@ func createColumn(title string, id int) *gtk.TreeViewColumn {
 }
 
 // Creates a tree view and the list store that holds its data
-func setupTreeView3(c1 string, c2 string, c3 string) ( *gtk.TreeView, *gtk.ListStore) {
+func setupTreeView3(c1 string, c2 string) ( *gtk.TreeView, *gtk.ListStore) {
 	treeView, err := gtk.TreeViewNew()
 	if err != nil {
 		log.Fatal("Unable to create tree view:", err)
@@ -37,10 +37,9 @@ func setupTreeView3(c1 string, c2 string, c3 string) ( *gtk.TreeView, *gtk.ListS
 
 	treeView.AppendColumn(createColumn(c1, COLUMN_VERSION))
 	treeView.AppendColumn(createColumn(c2, COLUMN_FEATURE))
-	treeView.AppendColumn(createColumn(c3, COLUMN_FEATURE1))
 
 	// Creating a list store. This is what holds the data that will be shown on our tree view.
-	listStore, err := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING,glib.TYPE_STRING)
+	listStore, err := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING)
 	if err != nil {
 		log.Fatal("Unable to create list store:", err)
 	}

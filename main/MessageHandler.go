@@ -24,7 +24,6 @@ func processRequestReceive(nm NodeMap, selfstr string, self NodeSocket, input st
 	var ms string
 	var metric metric
 	if m.Type=="Selected" || m.Type == "Train"{
-		//TODO: Actually process request/response portion --> need to make node 2 node connection
 		if m.Kind == "Prime" {
 			i,_:= strconv.ParseInt(m.Value,10,64)
 			num:=big.NewInt(i)
@@ -70,11 +69,26 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 	fmt.Print(m+"\n")
 	msg:=decode(m)
 	var dummy metric
+	var r map[string]int
+	var r1 map[string]int
 
-	if msg.Type =="Request" && (msg.Kind=="Prime"||msg.Kind=="Hash") {
+	r = make(map[string]int)
+	r1 = make(map[string]int)
+
+	if (msg.Type =="Request") && (msg.Kind=="Prime"||msg.Kind=="Hash") {
 		LeadNodeSend(m, selfsoc) // group node forwards the request to master node
-	} else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
-		
+	}else if(msg.Type=="BoardLeader"  )  {
+		for _,child := range getChildren(nm){
+			r[child]=nm.Nodes[child].PrimeMetric.Score
+			r1[child]=nm.Nodes[child].HashMetric.Score
+		}
+		s:=encodeRep(r)
+		s1:=encodeRep(r1)
+		var m metric
+		retmsg := encode(node.NodeName,"", msg.Kind, msg.Job,s, "BoardReply", s1,"", "", node.DataSendPort, m,"")
+		LeadNodeSend(retmsg, selfsoc)
+	}else if msg.Type=="Metric" && (msg.Kind=="Prime"||msg.Kind=="Hash"){
+
 		//reply to master node with the best node
 		//update busy list
 		//master finds the best node
@@ -129,16 +143,16 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		}
 
 	}else if msg.Type=="Hi" {
-			for k,v := range nm.Nodes {
-				if v.Leader == false && v.Master == false{
-					var dummy metric
-					dummy.NodeInf = v
-					up := encode(k, "", "", "", "", "UpdateUptime", "", "", "", "", dummy, "")
-					nodeSend(up,selfsoc)
-				}
-			}
-				up := encode("", "", "", "", "", "End", "", "", "", "", dummy, "")
+		for k,v := range nm.Nodes {
+			if v.Leader == false && v.Master == false{
+				var dummy metric
+				dummy.NodeInf = v
+				up := encode(k, "", "", "", "", "UpdateUptime", "", "", "", "", dummy, "")
 				nodeSend(up,selfsoc)
+			}
+		}
+		up := encode("", "", "", "", "", "End", "", "", "", "", dummy, "")
+		nodeSend(up,selfsoc)
 
 	}else if msg.Type=="Bye"{
 		clearNodeInfo(nm, msg.Sender)
@@ -150,8 +164,8 @@ func LeadNodeRec(selfname string, nm NodeMap, selfsoc NodeSocket, m string){
 		nodeSend(retmsg, selfsoc)
 
 	}
-
 }
+
 
 /*Master node will call this function after it received a message from a node. It will use send to retransmit the node. */
 func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
@@ -181,6 +195,15 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 			}
 		}
 
+	}else if msg.Type=="Refresh" {
+		var mp map[string]int
+		var me map[string]int
+		mp,me = getRepBoard(nodesoc, nodeinf,nm)
+		mpstr := encodeRep(mp)
+		mestr := encodeRep(me)
+		up := encode("", "", "", "",mpstr, "UIBoard", "","", "", "", dummy,mestr)
+		fmt.Println("PUSHING ONTO DATAQ " + mpstr + " " + mestr)
+		MQpush(self.dataq, up)
 	}else if msg.Type=="Bye"{
 		clearNodeInfo(nm, msg.Sender)
 		var dummy metric
@@ -209,7 +232,7 @@ func MasterNodeRec(node NodeInfo,nm NodeMap,self NodeSocket, m string){
 
 func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (NodeInfo,string) {
 	counter := make(map[string]bool)
-	size := len(getChildren(nm)) - 1
+	size := len(getChildren(nm))
 	c := 0
 	maxRep := -1
 	var bestNode NodeInfo
@@ -257,24 +280,26 @@ func MasterNodeMet(nm NodeMap, node NodeInfo,self NodeSocket, msg string) (NodeI
 }
 
 
-func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket){
+func MessageHandler(selfname string, nm NodeMap, selfsoc NodeSocket) {
 
 	selfnode := nm.Nodes[selfname]
 
 	s := MQpop(selfsoc.recvq)
-	if s == nil{
+	if s == nil {
 		return
 	}
 	message := fmt.Sprint(s)
-	m:= decode(message)
-	if m.Type == "TimeoutDetected"{
+	m := decode(message)
+	if m.Type == "TimeoutDetected" {
 		HandleTimeout(nm, m.Sender, selfsoc, m.Value)
-	} else if m.Receiver == selfname && m.Type == "Selected"{
+	}else if m.Type == "Train"{
+		processRequestReceive(nm, selfname, selfsoc, message)
+	}else if m.Receiver == selfname && m.Type == "Selected"{
 		processRequestReceive(nm, selfname, selfsoc, message)
 	} else if m.Receiver == selfname && m.Type == "Reply"{
 		processRequestSend(nm.Nodes[selfname], selfsoc, message)
 	} else if selfsoc.leader == true {
-		//println("Retransmitting " + message)
+		println("Retransmitting " + message)
 		LeadNodeRec(selfname, nm, selfsoc, message)
 	} else if selfsoc.master == true {
 		MasterNodeRec(selfnode,nm,selfsoc,message)

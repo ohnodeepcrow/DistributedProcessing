@@ -1,6 +1,10 @@
 import sys
 import random
 
+if sys.argv[1] == "-h" or len(sys.argv) < 6:
+    print "configgen.py MASTERIP MPORTBASE NODENAME NODEIP NPORTBASE"
+    exit()
+
 masterip = sys.argv[1]
 masterport = int(sys.argv[2])
 myname = sys.argv[3]

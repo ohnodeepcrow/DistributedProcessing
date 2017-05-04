@@ -13,6 +13,7 @@ type NodeSocket struct {
 	dataq 	 mutexQueue // only store the computation result
 	sendq	 mutexQueue
 	lsendq   mutexQueue
+	hbqueue	 mutexQueue //only for heartbeats
 	sendsock *zmq4.Socket //leaf multicast send
 	recvsock *zmq4.Socket //leaf multicast receive
 	leadersendsock *zmq4.Socket //leader multicast send
@@ -72,6 +73,7 @@ func establishLeader(context *zmq4.Context, self NodeInfo, master NodeInfo) Node
 	ret.lsendq = newMutexQueue()
 	ret.appq = newMutexQueue()
 	ret.dataq = newMutexQueue()
+	ret.hbqueue = newMutexQueue()
 	self.Leader = true
 	return ret
 }
@@ -102,6 +104,7 @@ func establishMaster (context *zmq4.Context, self NodeInfo) NodeSocket{
 	ret.lsendq = newMutexQueue()
 	ret.appq = newMutexQueue()
 	ret.dataq = newMutexQueue()
+	ret.hbqueue = newMutexQueue()
 	return ret
 }
 func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSocket{
@@ -131,6 +134,7 @@ func establishMember(context *zmq4.Context, self NodeInfo, ldr NodeInfo) NodeSoc
 	ret.lsendq = newMutexQueue()
 	ret.appq = newMutexQueue()
 	ret.dataq = newMutexQueue()
+	ret.hbqueue = newMutexQueue()
 	return ret
 }
 
@@ -179,15 +183,25 @@ func nodeReceive(soc NodeSocket){
 			continue
 		}
 		if tmp != "" {
-			fmt.Println("Group receive: "+(fmt.Sprint(tmp)))
-			MQpush(soc.recvq, tmp)
+			if isHbString(tmp){
+				//fmt.Println("HB receive: " + (fmt.Sprint(tmp)))
+				MQpush(soc.hbqueue, tmp)
+			} else {
+				fmt.Println("Group receive: " + (fmt.Sprint(tmp)))
+				MQpush(soc.recvq, tmp)
+			}
 		}
 		if soc.leader == true{
 			tmp1,err := soc.leaderrecvsock.Recv(zmq4.DONTWAIT)
 
 			if tmp1 != "" {
-				fmt.Println("Leader receive: "+(fmt.Sprint(tmp1)))
-				MQpush(soc.recvq, tmp1)
+				if isHbString(tmp1){
+					//fmt.Println("HB Leader receive: " + (fmt.Sprint(tmp1)))
+					MQpush(soc.hbqueue, tmp1)
+				} else {
+					fmt.Println("Leader receive: " + (fmt.Sprint(tmp1)))
+					MQpush(soc.recvq, tmp1)
+				}
 			}
 			if err == syscall.EAGAIN {
 				continue
@@ -216,7 +230,9 @@ func startSender (soc NodeSocket){
 			s := MQpop(soc.lsendq)
 			if s != nil {
 				msg := fmt.Sprint(s)
-				fmt.Println("Leader Sending " + msg)
+				if !isHbString(msg) {
+					fmt.Println("Leader Sending " + msg)
+				}
 				_, err := soc.leadersendsock.Send(msg, 0)
 				check(err)
 			}
@@ -224,7 +240,9 @@ func startSender (soc NodeSocket){
 		t := MQpop(soc.sendq)
 		if t != nil{
 			m := fmt.Sprint(t)
-			fmt.Println("Sending " + m)
+			if !isHbString(m) {
+				fmt.Println("Sending " + m)
+			}
 			_, err := soc.sendsock.Send(m, 0)
 			check(err)
 		}

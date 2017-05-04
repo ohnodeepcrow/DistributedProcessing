@@ -75,6 +75,6 @@ func main(){
 	go startMessageHandler(self.NodeName, myNodeMap, ns)
 	//go startIO(cntxt, ns, self)
 	go startUI(myNodeMap, ns, self)
-
+	startHeartbeatService(self.NodeName, ns)
 	wg.Wait()
 }
